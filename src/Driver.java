@@ -50,7 +50,7 @@ public class Driver extends JPanel implements Runnable, KeyListener, MouseListen
     {
         try
         {
-            bg = ImageIO.read(new File("0_1.jpeg"));
+            bg = ImageIO.read(new File("background.jpeg"));
             width = bg.getWidth();
         }
         catch (IOException e)
@@ -139,6 +139,7 @@ public class Driver extends JPanel implements Runnable, KeyListener, MouseListen
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
+        frame.setFocusable(true);
         System.out.println("Harry 오빠");
     }
 }
