@@ -11,8 +11,8 @@ public class Driver extends JPanel implements Runnable, KeyListener, MouseListen
 
     int FPS = 60;
     Thread thread;
-    int screenWidth = 800;
-    int screenHeight = 600;
+    int screenWidth = 1600;
+    int screenHeight = 1200;
     BufferedImage bg;
     int speed = 1;
     int x = 0;
@@ -50,7 +50,7 @@ public class Driver extends JPanel implements Runnable, KeyListener, MouseListen
     {
         try
         {
-            bg = ImageIO.read(new File("background.jpeg"));
+            bg = ImageIO.read(new File("0_1.jpeg"));
             width = bg.getWidth();
         }
         catch (IOException e)
