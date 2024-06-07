@@ -38,6 +38,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         wasteList = new ArrayList<>();
         decorations = new ArrayList<>();
 
+        try {
+            sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(24f);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(sherryFont);
+        } catch (IOException | FontFormatException e) {
+            e.printStackTrace();
+        }
+
         shopButton = new JButton("Shop");
         shopButton.setBounds(10, 10, 80, 30);
         shopButton.addActionListener(this);
