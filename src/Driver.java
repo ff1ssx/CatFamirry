@@ -1,145 +1,249 @@
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.awt.*;
-import java.io.*;
-import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Random;
+import java.awt.image.*;
+import javax.imageio.*;
+import java.io.*;
 
 @SuppressWarnings("serial")
-public class Driver extends JPanel implements Runnable, KeyListener, MouseListener
-{
+public class Driver extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
 
-    int FPS = 60;
-    Thread thread;
-    int screenWidth = 1600;
-    int screenHeight = 1200;
-    BufferedImage bg;
-    int speed = 1;
-    int x = 0;
-    int width;
-    boolean autoMove = true;
+    private static final int SCREEN_WIDTH = 800;
+    private static final int SCREEN_HEIGHT = 600;
+    private static final int TILE_SIZE = 50;
 
-    public Driver()
-    {
-        setPreferredSize(new Dimension(screenWidth, screenHeight));
-        setVisible(true);
-        thread = new Thread(this);
-        thread.start();
-    }
+    private ArrayList<Waste> wasteList;
+    private ArrayList<Decoration> decorations;
+    private double money = 100.0;
+    private JButton shopButton;
+    private boolean shopOpen = false;
+    private Decoration selectedDecoration;
+    private Random random = new Random();
+    private JFrame shopFrame;
+    private JPanel shopPanel;
+    private Point dragOffset;
+    private BufferedImage backgroundImage;
+    private Font sherryFont;
+    private MoneyPanel moneyPanel;
 
-    @Override
-    public void run()
-    {
-        initialize();
-        while (true)
-        {
-            update();
-            repaint();
-            try
-            {
-                Thread.sleep(1000 / FPS);
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+    public Driver() {
+        setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+        setBackground(Color.WHITE);
+        setLayout(null);
+        addMouseListener(this);
+        addMouseMotionListener(this);
+
+        wasteList = new ArrayList<>();
+        decorations = new ArrayList<>();
+
+        shopButton = new JButton("Shop");
+        shopButton.setBounds(10, 10, 80, 30);
+        shopButton.addActionListener(this);
+        add(shopButton);
+
+        moneyPanel = new MoneyPanel(money);
+        moneyPanel.setBounds(SCREEN_WIDTH - 260, 10, 200, 60);
+        add(moneyPanel);
+
+        Timer wasteTimer = new Timer(13000, this);
+        wasteTimer.setActionCommand("spawnWaste");
+        wasteTimer.start();
+
+        shopFrame = new JFrame("Shop");
+        shopFrame.setSize(600, 200);
+        shopButton.setFont(sherryFont);
+        shopFrame.setLocationRelativeTo(null);
+        shopFrame.setResizable(false);
+
+        shopPanel = new JPanel();
+        shopPanel.setLayout(new BoxLayout(shopPanel, BoxLayout.X_AXIS));
+        shopPanel.setBackground(Color.LIGHT_GRAY);
+
+        JScrollPane scrollPane = new JScrollPane(shopPanel);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        shopFrame.add(scrollPane);
+
+        shopFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+
+        shopButton.addActionListener(e -> shopFrame.setVisible(true));
+        shopButton.setBackground(Color.CYAN);
+
+        String[] items = {"Table", "Chair", "Cat Tree", "Litter Box", "Food Bowl", "Water Bowl", "Toy", "Sofa", "Coffee Machine", "Bookshelf"};
+        int[] prices = {50, 30, 80, 20, 10, 10, 15, 100, 60, 70};
+        for (int i = 0; i < items.length; i++) {
+            JPanel itemPanel = new JPanel();
+            itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
+            itemPanel.setBackground(Color.LIGHT_GRAY);
+            itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            JButton button = new JButton(items[i]);
+            button.setActionCommand(items[i]);
+            button.addActionListener(this);
+            button.setFont(sherryFont);
+            button.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel priceLabel = new JLabel("$" + prices[i]);
+            priceLabel.setFont(sherryFont);
+            priceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel imageLabel = new JLabel(new ImageIcon(items[i].toLowerCase() + ".png"));
+            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            itemPanel.add(imageLabel);
+            itemPanel.add(Box.createVerticalStrut(5));
+            itemPanel.add(button);
+            itemPanel.add(Box.createVerticalStrut(5));
+            itemPanel.add(priceLabel);
+
+            shopPanel.add(itemPanel);
         }
-    }
 
-    public void initialize()
-    {
-        try
-        {
-            bg = ImageIO.read(new File("0_1.jpeg"));
-            width = bg.getWidth();
-        }
-        catch (IOException e)
-        {
+        try {
+            backgroundImage = ImageIO.read(new File("temp.png"));
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void update()
-    {
-        x -= speed;
-        if (x < -width)
-        {
-            x = 0;
-        }
-        else if (x > width)
-        {
-            x = 0;
-        }
-    }
-
-    public void paintComponent(Graphics g)
-    {
+    @Override
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(bg, x, 0, null);
-        g.drawImage(bg, x + width, 0, null);
-        g.drawImage(bg, x - width, 0, null);
+
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
+        }
+
+        if (selectedDecoration != null) {
+            drawGrid(g);
+        }
+
+        for (Waste waste : wasteList) {
+            waste.render(g);
+        }
+
+        for (Decoration decoration : decorations) {
+            decoration.render(g);
+        }
+
+        g.setFont(sherryFont);
+        g.setColor(Color.ORANGE);
+        g.drawString("Money: $" + money, SCREEN_WIDTH - 250, 50);
+
+        if (selectedDecoration != null) {
+            selectedDecoration.render(g);
+        }
     }
 
-    @Override
-    public void keyTyped(KeyEvent e)
-    {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        int keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_S) {
-            autoMove = !autoMove;
-        } else if (keyCode == KeyEvent.VK_A) {
-            speed = 5;
-        } else if (keyCode == KeyEvent.VK_D) {
-            speed = -5;
+    private void drawGrid(Graphics g) {
+        g.setColor(new Color(200, 200, 200, 150));
+        for (int x = 0; x < SCREEN_WIDTH; x += TILE_SIZE) {
+            for (int y = 0; y < SCREEN_HEIGHT; y += TILE_SIZE) {
+                g.drawRect(x, y, TILE_SIZE, TILE_SIZE);
+            }
         }
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
-        speed = autoMove ? 1 : 0;
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+        if (command.equals("spawnWaste")) {
+            spawnWaste();
+        } else if (command.equals("Shop")) {
+            shopFrame.setVisible(true);
+        } else {
+            selectedDecoration = new Decoration(command, Color.YELLOW, -50, -50);
+            shopFrame.setVisible(false);
+        }
+        repaint();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        // TODO Auto-generated method stub
+        if (selectedDecoration != null) {
+            int mouseX = e.getX();
+            int mouseY = e.getY();
+            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+            decorations.add(new Decoration(selectedDecoration.getType(), selectedDecoration.getColor(), snappedX, snappedY));
+            selectedDecoration = null;
+            repaint();
+        } else {
+            int mouseX = e.getX();
+            int mouseY = e.getY();
+            for (int i = 0; i < wasteList.size(); i++) {
+                Waste waste = wasteList.get(i);
+                if (waste.contains(mouseX, mouseY)) {
+                    wasteList.remove(i);
+                    money += 5.0;
+                    moneyPanel.setMoney(money);
+                    break;
+                }
+            }
+            repaint();
+        }
     }
+
 
     @Override
     public void mousePressed(MouseEvent e) {
-        // TODO Auto-generated method stub
+        for (Decoration decoration : decorations) {
+            if (decoration.contains(e.getX(), e.getY())) {
+                dragOffset = new Point(e.getX() - decoration.getX(), e.getY() - decoration.getY());
+                selectedDecoration = decoration;
+                decorations.remove(decoration);
+                repaint();
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if (selectedDecoration != null) {
+            int mouseX = e.getX();
+            int mouseY = e.getY();
+            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+            selectedDecoration.setX(snappedX);
+            selectedDecoration.setY(snappedY);
+            repaint();
+        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        // TODO Auto-generated method stub
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        // TODO Auto-generated method stub
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        // TODO Auto-generated method stub
+    }
+
+    private void spawnWaste() {
+        int x = random.nextInt(SCREEN_WIDTH - 50);
+        int y = random.nextInt(SCREEN_HEIGHT - 50);
+        wasteList.add(new Waste(x, y));
+        repaint();
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Cat Cafe Tycoon");
+        JFrame frame = new JFrame("Cat Famirry");
         Driver gamePanel = new Driver();
         frame.add(gamePanel);
-        frame.addKeyListener(gamePanel);
-        frame.addMouseListener(gamePanel);
-        frame.setVisible(true);
         frame.pack();
-        frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
         frame.setResizable(false);
-        frame.setFocusable(true);
-        System.out.println("Harry 오빠");
+        frame.setVisible(true);
     }
 }
