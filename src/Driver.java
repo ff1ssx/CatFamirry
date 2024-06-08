@@ -16,6 +16,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
     private ArrayList<Waste> wasteList;
     private ArrayList<Decoration> decorations;
+    private ArrayList<Cat> cats;
     private double money = 100.0;
     private JButton shopButton;
     private boolean shopOpen = false;
