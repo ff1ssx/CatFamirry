@@ -21,6 +21,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private JButton shopButton;
     private boolean shopOpen = false;
     private Decoration selectedDecoration;
+    private Cat selectedCat;
     private Random random = new Random();
     private JFrame shopFrame;
     private JPanel shopPanel;
@@ -38,6 +39,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
         wasteList = new ArrayList<>();
         decorations = new ArrayList<>();
+        cats = new ArrayList<>();
 
         try {
             sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(24f);
@@ -125,7 +127,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
         }
 
-        if (selectedDecoration != null) {
+        if (selectedDecoration != null || selectedCat != null) {
             drawGrid(g);
         }
 
@@ -137,12 +139,21 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             decoration.render(g);
         }
 
+        for (Cat cat : cats) {
+            cat.render(g);
+        }
+
         g.setFont(sherryFont);
         g.setColor(Color.ORANGE);
         g.drawString("Money: $" + money, SCREEN_WIDTH - 250, 50);
 
         if (selectedDecoration != null) {
             selectedDecoration.render(g);
+        }
+
+        if(selectedCat != null)
+        {
+            selectedCat.render(g);
         }
     }
 
@@ -179,7 +190,18 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             decorations.add(new Decoration(selectedDecoration.getType(), selectedDecoration.getColor(), snappedX, snappedY));
             selectedDecoration = null;
             repaint();
-        } else {
+        }
+        else if(selectedCat != null)
+        {
+            int mouseX = e.getX();
+            int mouseY = e.getY();
+            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+            cats.add(new Cat(snappedX, snappedY, selectedCat.getColor(), selectedCat.getMood()));
+            selectedCat = null;
+            repaint();
+        }
+        else {
             int mouseX = e.getX();
             int mouseY = e.getY();
             for (int i = 0; i < wasteList.size(); i++) {
@@ -207,6 +229,17 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 break;
             }
         }
+
+        for (Cat cat : cats) {
+            if (cat.contains(e.getX(), e.getY()))
+            {
+                dragOffset = new Point(e.getX() - cat.getX(), e.getY() - cat.getY());
+                selectedCat = cat;
+                cats.remove(cat);
+                repaint();
+                break;
+            }
+        }
     }
 
     @Override
@@ -222,6 +255,16 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
             selectedDecoration.setX(snappedX);
             selectedDecoration.setY(snappedY);
+            repaint();
+        }
+        else if (selectedCat != null)
+        {
+            int mouseX = e.getX();
+            int mouseY = e.getY();
+            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+            selectedCat.setX(snappedX);
+            selectedCat.setY(snappedY);
             repaint();
         }
     }
@@ -246,7 +289,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Cat Famirry");
+        JFrame frame = new JFrame("Cat Famirry 사랑해 환희오빠");
         Driver gamePanel = new Driver();
         frame.add(gamePanel);
         frame.pack();

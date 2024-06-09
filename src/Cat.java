@@ -15,7 +15,38 @@ public class Cat
     private String mood;
     private Image catImage;
 
-    public Cat(int x, int y, Color color, String mood, int orderNum)
+    // Getters & Setters
+    public int getX()
+    {
+        return x;
+    }
+
+    public int getY()
+    {
+        return y;
+    }
+
+    public Color getColor()
+    {
+        return color;
+    }
+
+    public String getMood()
+    {
+        return mood;
+    }
+
+    public void setX(int x)
+    {
+        this.x = x;
+    }
+
+    public void setY(int y)
+    {
+        this.y = y;
+    }
+
+    public Cat(int x, int y, Color color, String mood)
     {
         this.x = x;
         this.y = y;
@@ -89,5 +120,10 @@ public class Cat
         }
 
         g.drawImage(catImage, x, y, width, height, null);
+    }
+
+    public boolean contains(int mouseX, int mouseY)
+    {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
 }
