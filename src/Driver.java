@@ -1,11 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Random;
 import java.awt.image.*;
-import javax.imageio.*;
 import java.io.*;
+import java.util.*;
+import javax.imageio.*;
 
 @SuppressWarnings("serial")
 public class Driver extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
@@ -15,20 +14,30 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private static final int TILE_SIZE = 50;
 
     private ArrayList<Waste> wasteList;
-    private ArrayList<Decoration> decorations;
+    private ArrayList<Item> items;
     private ArrayList<Cat> cats;
+    private ArrayList<Employee> employees;
     private double money = 100.0;
     private JButton shopButton;
     private boolean shopOpen = false;
-    private Decoration selectedDecoration;
+    private Item selectedItem;
     private Cat selectedCat;
+    private Employee selectedEmployee;
     private Random random = new Random();
-    private JFrame shopFrame;
-    private JPanel shopPanel;
+    private Shop shop;
     private Point dragOffset;
     private BufferedImage backgroundImage;
     private Font sherryFont;
     private MoneyPanel moneyPanel;
+    private static final int STATE_MENU = 0;
+    private static final int STATE_GAME = 1;
+    private static final int STATE_INSTRUCTIONS = 2;
+
+    private int gameState = STATE_MENU;
+    private BufferedImage menuImage;
+    private JButton startButton;
+    private JButton instructionButton;
+    private JButton menuButton;
 
     public Driver() {
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -38,8 +47,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         addMouseMotionListener(this);
 
         wasteList = new ArrayList<>();
-        decorations = new ArrayList<>();
+        items = new ArrayList<>();
         cats = new ArrayList<>();
+        employees = new ArrayList<>();
 
         try {
             sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(24f);
@@ -49,112 +59,116 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             e.printStackTrace();
         }
 
+        try {
+            menuImage = ImageIO.read(new File("menuImage.jpg"));
+            backgroundImage = ImageIO.read(new File("temp.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (gameState == STATE_MENU) {
+            setupMenuComponents();
+        }
+    }
+
+    private void setupMenuComponents() {
+        removeAll();
+        startButton = new JButton("Start");
+        startButton.setBounds(350, 200, 100, 50);
+        startButton.addActionListener(this);
+        startButton.setFont(sherryFont);
+        add(startButton);
+
+        instructionButton = new JButton("Instructions");
+        instructionButton.setBounds(350, 300, 150, 50);
+        instructionButton.addActionListener(this);
+        instructionButton.setFont(sherryFont);
+        add(instructionButton);
+
+        revalidate();
+        repaint();
+    }
+
+    private void setupGameComponents() {
+        removeAll();
         shopButton = new JButton("Shop");
         shopButton.setBounds(10, 10, 80, 30);
         shopButton.addActionListener(this);
+        shopButton.setFont(sherryFont);
         add(shopButton);
+
+        menuButton = new JButton("Menu");
+        menuButton.setBounds(100, 10, 100, 30);
+        menuButton.addActionListener(this);
+        menuButton.setFont(sherryFont);
+        add(menuButton);
 
         moneyPanel = new MoneyPanel(money);
         moneyPanel.setBounds(SCREEN_WIDTH - 260, 10, 200, 60);
         add(moneyPanel);
 
-        Timer wasteTimer = new Timer(13000, this);
-        wasteTimer.setActionCommand("spawnWaste");
-        wasteTimer.start();
+        shop = new Shop(sherryFont, money, moneyPanel, items, cats, employees, this);
 
-        shopFrame = new JFrame("Shop");
-        shopFrame.setSize(600, 200);
-        shopButton.setFont(sherryFont);
-        shopFrame.setLocationRelativeTo(null);
-        shopFrame.setResizable(false);
-
-        shopPanel = new JPanel();
-        shopPanel.setLayout(new BoxLayout(shopPanel, BoxLayout.X_AXIS));
-        shopPanel.setBackground(Color.LIGHT_GRAY);
-
-        JScrollPane scrollPane = new JScrollPane(shopPanel);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        shopFrame.add(scrollPane);
-
-        shopFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-
-        shopButton.addActionListener(e -> shopFrame.setVisible(true));
-        shopButton.setBackground(Color.CYAN);
-
-        String[] items = {"Table", "Chair", "Cat Tree", "Litter Box", "Food Bowl", "Water Bowl", "Toy", "Sofa", "Coffee Machine", "Bookshelf"};
-        int[] prices = {50, 30, 80, 20, 10, 10, 15, 100, 60, 70};
-        for (int i = 0; i < items.length; i++) {
-            JPanel itemPanel = new JPanel();
-            itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
-            itemPanel.setBackground(Color.LIGHT_GRAY);
-            itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-            JButton button = new JButton(items[i]);
-            button.setActionCommand(items[i]);
-            button.addActionListener(this);
-            button.setFont(sherryFont);
-            button.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            JLabel priceLabel = new JLabel("$" + prices[i]);
-            priceLabel.setFont(sherryFont);
-            priceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            JLabel imageLabel = new JLabel(new ImageIcon(items[i].toLowerCase() + ".png"));
-            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            itemPanel.add(imageLabel);
-            itemPanel.add(Box.createVerticalStrut(5));
-            itemPanel.add(button);
-            itemPanel.add(Box.createVerticalStrut(5));
-            itemPanel.add(priceLabel);
-
-            shopPanel.add(itemPanel);
-        }
-
-        try {
-            backgroundImage = ImageIO.read(new File("temp.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        revalidate();
+        repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (backgroundImage != null) {
-            g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
-        }
+        if (gameState == STATE_MENU) {
+            if (menuImage != null) {
+                g.drawImage(menuImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
+            }
+        } else if (gameState == STATE_GAME) {
+            if (backgroundImage != null) {
+                g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
+            }
 
-        if (selectedDecoration != null || selectedCat != null) {
-            drawGrid(g);
-        }
+            if (selectedItem != null || selectedCat != null || selectedEmployee != null) {
+                drawGrid(g);
+            }
 
-        for (Waste waste : wasteList) {
-            waste.render(g);
-        }
+            for (Waste waste : wasteList) {
+                waste.render(g);
+            }
 
-        for (Decoration decoration : decorations) {
-            decoration.render(g);
-        }
+            for (Item item : items) {
+                item.render(g);
+            }
 
-        for (Cat cat : cats) {
-            cat.render(g);
-        }
+            for (Cat cat : cats) {
+                cat.render(g);
+            }
 
-        g.setFont(sherryFont);
-        g.setColor(Color.ORANGE);
-        g.drawString("Money: $" + money, SCREEN_WIDTH - 250, 50);
+            for (Employee employee : employees) {
+                employee.render(g);
+            }
 
-        if (selectedDecoration != null) {
-            selectedDecoration.render(g);
-        }
+            g.setFont(sherryFont);
+            g.setColor(Color.ORANGE);
+            g.drawString("Money: $" + money, SCREEN_WIDTH - 250, 50);
 
-        if(selectedCat != null)
-        {
-            selectedCat.render(g);
+            if (selectedItem != null) {
+                selectedItem.render(g);
+            }
+
+            if (selectedCat != null) {
+                selectedCat.render(g);
+            }
+
+            if (selectedEmployee != null) {
+                selectedEmployee.render(g);
+            }
+        } else if (gameState == STATE_INSTRUCTIONS) {
         }
+    }
+
+    public void showGameScreen() {
+        gameState = STATE_GAME;
+        setupGameComponents();
+        repaint();
     }
 
     private void drawGrid(Graphics g) {
@@ -172,105 +186,137 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         if (command.equals("spawnWaste")) {
             spawnWaste();
         } else if (command.equals("Shop")) {
-            shopFrame.setVisible(true);
-        } else {
-            selectedDecoration = new Decoration(command, Color.YELLOW, -50, -50);
-            shopFrame.setVisible(false);
+            shop.showShop();
+        } else if (command.equals("Start")) {
+            gameState = STATE_GAME;
+            setupGameComponents();
+        } else if (command.equals("Instructions")) {
+            gameState = STATE_INSTRUCTIONS;
+            repaint();
+        } else if (command.equals("Menu")) {
+            gameState = STATE_MENU;
+            setupMenuComponents();
         }
         repaint();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (selectedDecoration != null) {
-            int mouseX = e.getX();
-            int mouseY = e.getY();
-            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-            decorations.add(new Decoration(selectedDecoration.getType(), selectedDecoration.getColor(), snappedX, snappedY));
-            selectedDecoration = null;
-            repaint();
-        }
-        else if(selectedCat != null)
-        {
-            int mouseX = e.getX();
-            int mouseY = e.getY();
-            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-            cats.add(new Cat(snappedX, snappedY, selectedCat.getColor(), selectedCat.getMood()));
-            selectedCat = null;
-            repaint();
-        }
-        else {
-            int mouseX = e.getX();
-            int mouseY = e.getY();
-            for (int i = 0; i < wasteList.size(); i++) {
-                Waste waste = wasteList.get(i);
-                if (waste.contains(mouseX, mouseY)) {
-                    wasteList.remove(i);
-                    money += 5.0;
-                    moneyPanel.setMoney(money);
-                    break;
+        int mouseX = e.getX();
+        int mouseY = e.getY();
+
+        if (gameState == STATE_MENU) {
+
+        } else if (gameState == STATE_GAME) {
+            if (selectedItem != null) {
+                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+                items.add(new Item(selectedItem.getType(), selectedItem.getColor(), snappedX, snappedY));
+                selectedItem = null;
+                repaint();
+            } else if (selectedCat != null) {
+                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+                cats.add(new Cat(snappedX, snappedY, selectedCat.getColor(), selectedCat.getMood()));
+                selectedCat = null;
+                repaint();
+            } else if (selectedEmployee != null) {
+                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+                employees.add(new Employee(selectedEmployee.getName(), selectedEmployee.getRole(), snappedX, snappedY));
+                selectedEmployee = null;
+                repaint();
+            } else {
+                for (int i = 0; i < wasteList.size(); i++) {
+                    Waste waste = wasteList.get(i);
+                    if (waste.contains(mouseX, mouseY)) {
+                        wasteList.remove(i);
+                        money += 5.0;
+                        moneyPanel.setMoney(money);
+                        break;
+                    }
                 }
+                repaint();
             }
-            repaint();
         }
     }
 
-
     @Override
     public void mousePressed(MouseEvent e) {
-        for (Decoration decoration : decorations) {
-            if (decoration.contains(e.getX(), e.getY())) {
-                dragOffset = new Point(e.getX() - decoration.getX(), e.getY() - decoration.getY());
-                selectedDecoration = decoration;
-                decorations.remove(decoration);
-                repaint();
-                break;
+        if (gameState == STATE_GAME) {
+            for (Item item : items) {
+                if (item.contains(e.getX(), e.getY())) {
+                    dragOffset = new Point(e.getX() - item.getX(), e.getY() - item.getY());
+                    selectedItem = item;
+                    items.remove(item);
+                    repaint();
+                    break;
+                }
             }
-        }
 
-        for (Cat cat : cats) {
-            if (cat.contains(e.getX(), e.getY()))
-            {
-                dragOffset = new Point(e.getX() - cat.getX(), e.getY() - cat.getY());
-                selectedCat = cat;
-                cats.remove(cat);
-                repaint();
-                break;
+            for (Cat cat : cats) {
+                if (cat.contains(e.getX(), e.getY())) {
+                    dragOffset = new Point(e.getX() - cat.getX(), e.getY() - cat.getY());
+                    selectedCat = cat;
+                    cats.remove(cat);
+                    repaint();
+                    break;
+                }
+            }
+
+            for (Employee employee : employees) {
+                if (employee.contains(e.getX(), e.getY())) {
+                    dragOffset = new Point(e.getX() - employee.getX(), e.getY() - employee.getY());
+                    selectedEmployee = employee;
+                    employees.remove(employee);
+                    repaint();
+                    break;
+                }
             }
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        if (gameState == STATE_GAME) {
+        }
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (selectedDecoration != null) {
-            int mouseX = e.getX();
-            int mouseY = e.getY();
-            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-            selectedDecoration.setX(snappedX);
-            selectedDecoration.setY(snappedY);
-            repaint();
-        }
-        else if (selectedCat != null)
-        {
-            int mouseX = e.getX();
-            int mouseY = e.getY();
-            int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-            int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-            selectedCat.setX(snappedX);
-            selectedCat.setY(snappedY);
-            repaint();
+        if (gameState == STATE_GAME) {
+            if (selectedItem != null) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+                selectedItem.setX(snappedX);
+                selectedItem.setY(snappedY);
+                repaint();
+            } else if (selectedCat != null) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+                selectedCat.setX(snappedX);
+                selectedCat.setY(snappedY);
+                repaint();
+            } else if (selectedEmployee != null) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
+                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
+                selectedEmployee.setX(snappedX);
+                selectedEmployee.setY(snappedY);
+                repaint();
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        if (gameState == STATE_GAME) {
+        }
     }
 
     @Override
@@ -297,5 +343,17 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setVisible(true);
+    }
+
+    public void setSelectedItem(Item item) {
+        this.selectedItem = item;
+    }
+
+    public void setSelectedCat(Cat cat) {
+        this.selectedCat = cat;
+    }
+
+    public void setSelectedEmployee(Employee employee) {
+        this.selectedEmployee = employee;
     }
 }

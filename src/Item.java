@@ -3,15 +3,14 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-public class Decoration {
-
+public class Item {
     private String type;
     private Color color;
     private int x, y;
     private int width, height;
     private Image image;
 
-    public Decoration(String type, Color color, int x, int y) {
+    public Item(String type, Color color, int x, int y) {
         this.type = type;
         this.color = color;
         this.x = x;
@@ -23,39 +22,22 @@ public class Decoration {
 
     private void loadImage() {
         try {
+            Image rawImage;
             switch (type) {
                 case "Table":
-                    image = ImageIO.read(new File("table-removebg-preview.png"));
+                    rawImage = ImageIO.read(new File("table.png"));
                     break;
                 case "Chair":
-                    image = ImageIO.read(new File("chair-removebg-preview.png"));
+                    rawImage = ImageIO.read(new File("chair.png"));
                     break;
-                case "Cat Tree":
-                    image = ImageIO.read(new File("cat_tree.png"));
-                    break;
-                case "Litter Box":
-                    image = ImageIO.read(new File("litter_box.png"));
-                    break;
-                case "Food Bowl":
-                    image = ImageIO.read(new File("food_bowl.png"));
-                    break;
-                case "Water Bowl":
-                    image = ImageIO.read(new File("water_bowl.png"));
-                    break;
-                case "Toy":
-                    image = ImageIO.read(new File("toy.png"));
-                    break;
-                case "Sofa":
-                    image = ImageIO.read(new File("sofa.png"));
-                    break;
-                case "Coffee Machine":
-                    image = ImageIO.read(new File("coffee_machine.png"));
-                    break;
-                case "Bookshelf":
-                    image = ImageIO.read(new File("bookshelf.png"));
+                case "Coffee":
+                    rawImage = ImageIO.read(new File("coffee.png"));
                     break;
                 default:
-                    image = null;
+                    rawImage = null;
+            }
+            if (rawImage != null) {
+                image = rawImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             }
         } catch (IOException e) {
             e.printStackTrace();
