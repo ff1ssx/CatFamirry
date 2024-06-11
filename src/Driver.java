@@ -17,7 +17,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private ArrayList<Item> items;
     private ArrayList<Cat> cats;
     private ArrayList<Employee> employees;
+    private ArrayList<Customer> customers;
     private double money = 100.0;
+    private int revolution = 0;
     private JButton shopButton;
     private boolean shopOpen = false;
     private Item selectedItem;
@@ -50,6 +52,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         items = new ArrayList<>();
         cats = new ArrayList<>();
         employees = new ArrayList<>();
+        customers = new ArrayList<>();
 
         try {
             sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(24f);
@@ -146,6 +149,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 employee.render(g);
             }
 
+            for(Customer customer: customers)
+            {
+                customer.render(g);
+                customers.remove(customer);
+            }
+
             g.setFont(sherryFont);
             g.setColor(Color.ORANGE);
             g.drawString("Money: $" + money, SCREEN_WIDTH - 250, 50);
@@ -176,6 +185,63 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         for (int x = 0; x < SCREEN_WIDTH; x += TILE_SIZE) {
             for (int y = 0; y < SCREEN_HEIGHT; y += TILE_SIZE) {
                 g.drawRect(x, y, TILE_SIZE, TILE_SIZE);
+            }
+        }
+    }
+
+    private void setRevolution()
+    {
+        if(wasteList.size() >= 10)
+        {
+            revolution--;
+
+            if(wasteList.size() >= 20)
+            {
+                revolution--;
+            }
+        }
+
+        if(items.size() >= 10)
+        {
+            revolution++;
+
+            if(items.size() >= 20)
+            {
+                revolution++;
+            }
+        }
+    }
+
+    private void addCustomer()
+    {
+        if(revolution > 0 && revolution <= 5)
+        {
+            int randomNum = (int)(Math.random() * (3 - 1 + 1)) + 1;
+
+            for(int i = 0; i <= randomNum; i++)
+            {
+                customers.add(new Customer(600, 800));
+                repaint();
+            }
+        }
+        else if(revolution > 5 && revolution <= 10)
+        {
+            int randomNum = (int)(Math.random() * (7 - 1 + 1)) + 1;
+
+            for(int i = 0; i <= randomNum; i++)
+            {
+                customers.add(new Customer(600, 800));
+                repaint();
+            }
+        }
+        else if(revolution > 10)
+        {
+            int randomNum = (int)(Math.random() * (15 - 1 + 1)) + 1;
+
+            for(int i = 0; i <= randomNum; i++)
+            {
+                customers.add(new Customer(600, 800));
+                repaint();
             }
         }
     }

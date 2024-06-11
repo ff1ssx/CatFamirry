@@ -18,6 +18,8 @@ public class Customer
     {
         this.x = x;
         this.y = y;
+        this.width = 50;
+        this.height = 150;
         satisfaction = 0.0;
         patience = 10.0;
         moneySpent = 0.0;
@@ -59,9 +61,10 @@ public class Customer
 
     public void leave()
     {
-        while(x <= 600)
+        while(x <= 600 && y <= 800)
         {
-            x-=5;
+            x+=5;
+            y+=5;
         }
     }
 
