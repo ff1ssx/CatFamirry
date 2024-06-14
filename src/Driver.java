@@ -34,12 +34,19 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private static final int STATE_MENU = 0;
     private static final int STATE_GAME = 1;
     private static final int STATE_INSTRUCTIONS = 2;
+    private static final int STATE_ABOUT = 3;
 
     private int gameState = STATE_MENU;
     private BufferedImage menuImage;
-    private JButton startButton;
-    private JButton instructionButton;
-    private JButton menuButton;
+
+    // Button "areas"
+    private Rectangle startButtonArea = new Rectangle(240, 189, 320, 47);
+    private Rectangle instructionsButtonArea = new Rectangle(240, 321, 320, 47);
+    private Rectangle aboutButtonArea = new Rectangle(240, 452, 320, 47);
+
+    // In-game
+    private Rectangle menuButtonArea = new Rectangle(9, 14, 101, 38);
+    private Rectangle shopButtonArea = new Rectangle(9, 60, 101, 38);
 
     public Driver() {
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -63,8 +70,8 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
 
         try {
-            menuImage = ImageIO.read(new File("menuImage.jpg"));
-            backgroundImage = ImageIO.read(new File("temp.png"));
+            menuImage = ImageIO.read(new File("menuImage.png"));
+            backgroundImage = ImageIO.read(new File("backgroundImage.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -75,36 +82,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     private void setupMenuComponents() {
-        removeAll();
-        startButton = new JButton("Start");
-        startButton.setBounds(350, 200, 100, 50);
-        startButton.addActionListener(this);
-        startButton.setFont(sherryFont);
-        add(startButton);
-
-        instructionButton = new JButton("Instructions");
-        instructionButton.setBounds(350, 300, 150, 50);
-        instructionButton.addActionListener(this);
-        instructionButton.setFont(sherryFont);
-        add(instructionButton);
-
         revalidate();
         repaint();
     }
 
     private void setupGameComponents() {
         removeAll();
-        shopButton = new JButton("Shop");
-        shopButton.setBounds(10, 10, 80, 30);
-        shopButton.addActionListener(this);
-        shopButton.setFont(sherryFont);
-        add(shopButton);
-
-        menuButton = new JButton("Menu");
-        menuButton.setBounds(100, 10, 100, 30);
-        menuButton.addActionListener(this);
-        menuButton.setFont(sherryFont);
-        add(menuButton);
 
         moneyPanel = new MoneyPanel(money);
         moneyPanel.setBounds(SCREEN_WIDTH - 260, 10, 200, 60);
@@ -172,12 +155,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             }
         } else if (gameState == STATE_INSTRUCTIONS) {
         }
-    }
-
-    public void showGameScreen() {
-        gameState = STATE_GAME;
-        setupGameComponents();
-        repaint();
     }
 
     private void drawGrid(Graphics g) {
@@ -272,8 +249,24 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         int mouseY = e.getY();
 
         if (gameState == STATE_MENU) {
-
+            if (startButtonArea.contains(mouseX, mouseY)) {
+                gameState = STATE_GAME;
+                setupGameComponents();
+            } else if (instructionsButtonArea.contains(mouseX, mouseY)) {
+                gameState = STATE_INSTRUCTIONS;
+                repaint();
+            } else if (aboutButtonArea.contains(mouseX, mouseY)) {
+                gameState = STATE_ABOUT;
+                repaint();
+            }
         } else if (gameState == STATE_GAME) {
+            if(menuButtonArea.contains(mouseX, mouseY)) {
+                gameState = STATE_MENU;
+                setupMenuComponents();
+            } else if (shopButtonArea.contains(mouseX, mouseY)) {
+                shop.showShop();
+            }
+
             if (selectedItem != null) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;

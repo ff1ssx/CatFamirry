@@ -22,22 +22,18 @@ public class Item {
 
     private void loadImage() {
         try {
-            Image rawImage;
             switch (type) {
                 case "Table":
-                    rawImage = ImageIO.read(new File("table.png"));
+                    image = ImageIO.read(new File("table.png"));
                     break;
                 case "Chair":
-                    rawImage = ImageIO.read(new File("chair.png"));
+                    image = ImageIO.read(new File("chair.png"));
                     break;
                 case "Coffee":
-                    rawImage = ImageIO.read(new File("coffee.png"));
+                    image = ImageIO.read(new File("coffee.png"));
                     break;
                 default:
-                    rawImage = null;
-            }
-            if (rawImage != null) {
-                image = rawImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                    image = null;
             }
         } catch (IOException e) {
             e.printStackTrace();
