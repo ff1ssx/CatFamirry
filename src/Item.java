@@ -43,8 +43,29 @@ public class Item implements Comparable<Item> {
                 case "Cat Litter Box":
                     image = ImageIO.read(new File("Cat Litter Box.png"));
                     break;
+                case "Cat Food":
+                    image = ImageIO.read(new File("Cat Food.png"));
+                    break;
+                case "Cat Can":
+                    image = ImageIO.read(new File("Cat Can.png"));
+                    break;
+                case "Cat Toy 1":
+                    image = ImageIO.read(new File("Cat Toy 1.png"));
+                    break;
+                case "Cat Toy 2":
+                    image = ImageIO.read(new File("Cat Toy 2.png"));
+                    break;
+                case "Cat Comb":
+                    image = ImageIO.read(new File("Cat Comb.png"));
+                    break;
                 case "Coffee Machine":
                     image = ImageIO.read(new File("Coffee Machine.png"));
+                    break;
+                case "Ice Cream Machine":
+                    image = ImageIO.read(new File("Ice Cream Machine.png"));
+                    break;
+                case "Cake":
+                    image = ImageIO.read(new File("Cake.png"));
                     break;
                 default:
                     image = null;

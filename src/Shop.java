@@ -57,7 +57,14 @@ public class Shop implements ActionListener {
         addItemToShop(new Item("Sofa", Color.YELLOW, 0, 0, 0));
         addItemToShop(new Item("Cat Tree", Color.YELLOW, 0, 0, 0));
         addItemToShop(new Item("Cat Litter Box", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Food", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Can", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Toy 1", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Toy 2", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Comb", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cake", Color.YELLOW, 0, 0, 0));
         addItemToShop(new Item("Coffee Machine", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Ice Cream Machine", Color.YELLOW, 0, 0, 0));
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(sherryFont);
