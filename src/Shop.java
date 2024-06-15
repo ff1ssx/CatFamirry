@@ -51,9 +51,13 @@ public class Shop implements ActionListener {
         shopFrame.setLocationRelativeTo(null);
         shopFrame.setResizable(false);
 
-        addItemToShop(new Item("Table", Color.YELLOW, 0, 0, 50));
-        addItemToShop(new Item("Chair", Color.YELLOW, 0, 0, 30));
-        addItemToShop(new Item("Coffee", Color.YELLOW, 0, 0, 20));
+        addItemToShop(new Item("Table", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Left Chair", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Right Chair", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Sofa", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Tree", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Cat Litter Box", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Coffee Machine", Color.YELLOW, 0, 0, 0));
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(sherryFont);

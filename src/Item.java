@@ -26,10 +26,25 @@ public class Item implements Comparable<Item> {
         try {
             switch (type) {
                 case "Table":
-                    image = ImageIO.read(new File("table.png"));
+                    image = ImageIO.read(new File("Table.png"));
                     break;
-                case "Chair":
-                    image = ImageIO.read(new File("chair.png"));
+                case "Left Chair":
+                    image = ImageIO.read(new File("Left Chair.png"));
+                    break;
+                case "Right Chair":
+                    image = ImageIO.read(new File("Right Chair.png"));
+                    break;
+                case "Sofa":
+                    image = ImageIO.read(new File("Sofa.png"));
+                    break;
+                case "Cat Tree":
+                    image = ImageIO.read(new File("Cat Tree.png"));
+                    break;
+                case "Cat Litter Box":
+                    image = ImageIO.read(new File("Cat Litter Box.png"));
+                    break;
+                case "Coffee Machine":
+                    image = ImageIO.read(new File("Coffee Machine.png"));
                     break;
                 default:
                     image = null;
