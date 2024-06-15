@@ -46,8 +46,10 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private Rectangle instructionsButtonArea = new Rectangle(240, 321, 320, 47);
     private Rectangle aboutButtonArea = new Rectangle(240, 452, 320, 47);
 
-    // In-game
+    // In-game, In-Instruction, In-About
     private Rectangle menuButtonArea = new Rectangle(9, 14, 101, 38);
+
+    // In-game
     private Rectangle shopButtonArea = new Rectangle(9, 60, 101, 38);
 
     public Driver() {
