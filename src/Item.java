@@ -3,20 +3,22 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-public class Item {
+public class Item implements Comparable<Item> {
     private String type;
     private Color color;
     private int x, y;
     private int width, height;
     private Image image;
+    private int price;
 
-    public Item(String type, Color color, int x, int y) {
+    public Item(String type, Color color, int x, int y, int price) {
         this.type = type;
         this.color = color;
         this.x = x;
         this.y = y;
         this.width = 50;
         this.height = 50;
+        this.price = price;
         loadImage();
     }
 
@@ -28,9 +30,6 @@ public class Item {
                     break;
                 case "Chair":
                     image = ImageIO.read(new File("chair.png"));
-                    break;
-                case "Coffee":
-                    image = ImageIO.read(new File("coffee.png"));
                     break;
                 default:
                     image = null;
@@ -81,7 +80,16 @@ public class Item {
         return height;
     }
 
+    public int getPrice() {
+        return price;
+    }
+
     public boolean contains(int mouseX, int mouseY) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
+    @Override
+    public int compareTo(Item other) {
+        return Integer.compare(this.price, other.price);
     }
 }

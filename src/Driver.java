@@ -1,10 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
-import java.io.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
-import javax.imageio.*;
+import javax.imageio.ImageIO;
+import javax.swing.Timer;
 
 @SuppressWarnings("serial")
 public class Driver extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
@@ -14,14 +16,15 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private static final int TILE_SIZE = 50;
 
     private ArrayList<Waste> wasteList;
+    private Timer wasteTimer;
     private ArrayList<Item> items;
     private ArrayList<Cat> cats;
     private ArrayList<Employee> employees;
+    private HashSet<Item> uniqueItems;
     private ArrayList<Customer> customers;
     private double money = 100.0;
+    private double reputation = 100.0;
     private int revolution = 0;
-    private JButton shopButton;
-    private boolean shopOpen = false;
     private Item selectedItem;
     private Cat selectedCat;
     private Employee selectedEmployee;
@@ -30,7 +33,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private Point dragOffset;
     private BufferedImage backgroundImage;
     private Font sherryFont;
-    private MoneyPanel moneyPanel;
     private static final int STATE_MENU = 0;
     private static final int STATE_GAME = 1;
     private static final int STATE_INSTRUCTIONS = 2;
@@ -60,6 +62,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         cats = new ArrayList<>();
         employees = new ArrayList<>();
         customers = new ArrayList<>();
+        uniqueItems = new HashSet<>();
 
         try {
             sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(24f);
@@ -89,11 +92,10 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private void setupGameComponents() {
         removeAll();
 
-        moneyPanel = new MoneyPanel(money);
-        moneyPanel.setBounds(SCREEN_WIDTH - 260, 10, 200, 60);
-        add(moneyPanel);
+        shop = new Shop(sherryFont, money, items, cats, employees, this);
 
-        shop = new Shop(sherryFont, money, moneyPanel, items, cats, employees, this);
+        wasteTimer = new Timer(13000, e -> spawnWaste());
+        wasteTimer.start();
 
         revalidate();
         repaint();
@@ -132,15 +134,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 employee.render(g);
             }
 
-            for(Customer customer: customers)
-            {
+            for (Customer customer : customers) {
                 customer.render(g);
-                customers.remove(customer);
             }
 
             g.setFont(sherryFont);
-            g.setColor(Color.ORANGE);
-            g.drawString("Money: $" + money, SCREEN_WIDTH - 250, 50);
+            g.setColor(Color.BLACK);
+            g.drawString("" + reputation, 545, 38);
+            g.drawString("" + money, 690, 38);
 
             if (selectedItem != null) {
                 selectedItem.render(g);
@@ -154,6 +155,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 selectedEmployee.render(g);
             }
         } else if (gameState == STATE_INSTRUCTIONS) {
+            // Render instructions screen
         }
     }
 
@@ -166,57 +168,25 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-    private void setRevolution()
-    {
-        if(wasteList.size() >= 10)
-        {
-            revolution--;
+    private void addCustomer() {
+        if (revolution > 0 && revolution <= 5) {
+            int randomNum = (int) (Math.random() * (3 - 1 + 1)) + 1;
 
-            if(wasteList.size() >= 20)
-            {
-                revolution--;
-            }
-        }
-
-        if(items.size() >= 10)
-        {
-            revolution++;
-
-            if(items.size() >= 20)
-            {
-                revolution++;
-            }
-        }
-    }
-
-    private void addCustomer()
-    {
-        if(revolution > 0 && revolution <= 5)
-        {
-            int randomNum = (int)(Math.random() * (3 - 1 + 1)) + 1;
-
-            for(int i = 0; i <= randomNum; i++)
-            {
+            for (int i = 0; i <= randomNum; i++) {
                 customers.add(new Customer(600, 800));
                 repaint();
             }
-        }
-        else if(revolution > 5 && revolution <= 10)
-        {
-            int randomNum = (int)(Math.random() * (7 - 1 + 1)) + 1;
+        } else if (revolution > 5 && revolution <= 10) {
+            int randomNum = (int) (Math.random() * (7 - 1 + 1)) + 1;
 
-            for(int i = 0; i <= randomNum; i++)
-            {
+            for (int i = 0; i <= randomNum; i++) {
                 customers.add(new Customer(600, 800));
                 repaint();
             }
-        }
-        else if(revolution > 10)
-        {
-            int randomNum = (int)(Math.random() * (15 - 1 + 1)) + 1;
+        } else if (revolution > 10) {
+            int randomNum = (int) (Math.random() * (15 - 1 + 1)) + 1;
 
-            for(int i = 0; i <= randomNum; i++)
-            {
+            for (int i = 0; i <= randomNum; i++) {
                 customers.add(new Customer(600, 800));
                 repaint();
             }
@@ -260,7 +230,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 repaint();
             }
         } else if (gameState == STATE_GAME) {
-            if(menuButtonArea.contains(mouseX, mouseY)) {
+            if (menuButtonArea.contains(mouseX, mouseY)) {
                 gameState = STATE_MENU;
                 setupMenuComponents();
             } else if (shopButtonArea.contains(mouseX, mouseY)) {
@@ -270,7 +240,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             if (selectedItem != null) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-                items.add(new Item(selectedItem.getType(), selectedItem.getColor(), snappedX, snappedY));
+                items.add(new Item(selectedItem.getType(), selectedItem.getColor(), snappedX, snappedY, selectedItem.getPrice()));
                 selectedItem = null;
                 repaint();
             } else if (selectedCat != null) {
@@ -290,8 +260,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                     Waste waste = wasteList.get(i);
                     if (waste.contains(mouseX, mouseY)) {
                         wasteList.remove(i);
-                        money += 5.0;
-                        moneyPanel.setMoney(money);
+                        reputation += 5.0;
                         break;
                     }
                 }
@@ -414,5 +383,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
     public void setSelectedEmployee(Employee employee) {
         this.selectedEmployee = employee;
+    }
+
+    public double getMoney() {
+        return money;
+    }
+
+    public void setMoney(double money) {
+        this.money = money;
+        repaint();
     }
 }

@@ -1,15 +1,18 @@
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.List;
 
 public class Shop implements ActionListener {
     private JFrame shopFrame;
     private JTabbedPane tabbedPane;
     private Font sherryFont;
     private double money;
-    private MoneyPanel moneyPanel;
     private ArrayList<Item> items;
+    private ArrayList<Item> shopItems;
     private ArrayList<Cat> cats;
     private ArrayList<Employee> employees;
     private Item selectedItem;
@@ -17,23 +20,28 @@ public class Shop implements ActionListener {
     private Employee selectedEmployee;
     private Driver driver;
 
-    private static final String[] ITEM_TYPES = {"Table", "Chair", "Coffee"};
-    private static final int[] ITEM_PRICES = {50, 30, 20, 30, 25};
-
     private static final String[] CAT_TYPES = {"Cat1", "Cat2", "Cat3"};
     private static final int[] CAT_PRICES = {80, 90, 100};
 
     private static final String[] EMPLOYEE_TYPES = {"Waiter", "Chef", "Cleaner"};
     private static final int[] EMPLOYEE_PRICES = {100, 120, 80};
 
-    public Shop(Font sherryFont, double money, MoneyPanel moneyPanel, ArrayList<Item> items, ArrayList<Cat> cats, ArrayList<Employee> employees, Driver driver) {
+    private JButton ascendingButton;
+    private JButton descendingButton;
+
+    private HashMap<String, Item> shopItemsMap;
+    private JTextField searchField;
+    private JPanel itemPanel;
+
+    public Shop(Font sherryFont, double money, ArrayList<Item> items, ArrayList<Cat> cats, ArrayList<Employee> employees, Driver driver) {
         this.sherryFont = sherryFont;
         this.money = money;
-        this.moneyPanel = moneyPanel;
         this.items = items;
         this.cats = cats;
         this.employees = employees;
         this.driver = driver;
+        this.shopItems = new ArrayList<>();
+        this.shopItemsMap = new HashMap<>();
         setupShopFrame();
     }
 
@@ -43,18 +51,131 @@ public class Shop implements ActionListener {
         shopFrame.setLocationRelativeTo(null);
         shopFrame.setResizable(false);
 
+        addItemToShop(new Item("Table", Color.YELLOW, 0, 0, 50));
+        addItemToShop(new Item("Chair", Color.YELLOW, 0, 0, 30));
+        addItemToShop(new Item("Coffee", Color.YELLOW, 0, 0, 20));
+
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(sherryFont);
 
-        tabbedPane.addTab("Items", createShopPanel(ITEM_TYPES, ITEM_PRICES));
-        tabbedPane.addTab("Cats", createShopPanel(CAT_TYPES, CAT_PRICES));
-        tabbedPane.addTab("Employees", createShopPanel(EMPLOYEE_TYPES, EMPLOYEE_PRICES));
+        tabbedPane.addTab("Items", createShopPanel());
+        tabbedPane.addTab("Cats", createStaticShopPanel(CAT_TYPES, CAT_PRICES));
+        tabbedPane.addTab("Employees", createStaticShopPanel(EMPLOYEE_TYPES, EMPLOYEE_PRICES));
 
         shopFrame.add(tabbedPane);
         shopFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
     }
 
-    private JPanel createShopPanel(String[] items, int[] prices) {
+    private void addItemToShop(Item item) {
+        shopItems.add(item);
+        shopItemsMap.put(item.getType(), item);
+    }
+
+    private JPanel createShopPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        itemPanel = new JPanel();
+        itemPanel.setLayout(new GridLayout(0, 3, 10, 10));
+        itemPanel.setBackground(Color.LIGHT_GRAY);
+        itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        updateItemPanel("");
+
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BorderLayout());
+
+        searchField = new JTextField(15);
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                updateItemPanel(searchField.getText().toLowerCase());
+            }
+            public void removeUpdate(DocumentEvent e) {
+                updateItemPanel(searchField.getText().toLowerCase());
+            }
+            public void insertUpdate(DocumentEvent e) {
+                updateItemPanel(searchField.getText().toLowerCase());
+            }
+        });
+
+        JPanel searchPanel = new JPanel();
+        searchPanel.add(new JLabel("Search: "));
+        searchPanel.add(searchField);
+
+        JPanel buttonPanel = new JPanel();
+        ascendingButton = new JButton("Ascending");
+        descendingButton = new JButton("Descending");
+
+        ascendingButton.addActionListener(this);
+        ascendingButton.setActionCommand("Ascending");
+
+        descendingButton.addActionListener(this);
+        descendingButton.setActionCommand("Descending");
+
+        buttonPanel.add(ascendingButton);
+        buttonPanel.add(descendingButton);
+
+        topPanel.add(searchPanel, BorderLayout.WEST);
+        topPanel.add(buttonPanel, BorderLayout.EAST);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(itemPanel, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void updateItemPanel(String query) {
+        itemPanel.removeAll();
+
+        for (Item item : shopItems) {
+            if (item.getType().toLowerCase().contains(query)) {
+                JPanel itemPanelInner = new JPanel();
+                itemPanelInner.setLayout(new BoxLayout(itemPanelInner, BoxLayout.Y_AXIS));
+                itemPanelInner.setBackground(Color.LIGHT_GRAY);
+                itemPanelInner.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+                ImageIcon rawIcon = new ImageIcon(item.getType().toLowerCase() + ".png");
+                Image scaledImage = rawIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+                JButton imageButton = new JButton(new ImageIcon(scaledImage));
+                imageButton.setActionCommand(item.getType());
+                imageButton.addActionListener(this);
+                imageButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                JLabel nameLabel = new JLabel(item.getType());
+                nameLabel.setFont(sherryFont);
+                nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                JLabel priceLabel = new JLabel("$" + item.getPrice());
+                priceLabel.setFont(sherryFont);
+                priceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                itemPanelInner.add(imageButton);
+                itemPanelInner.add(Box.createVerticalStrut(5));
+                itemPanelInner.add(nameLabel);
+                itemPanelInner.add(priceLabel);
+
+                itemPanel.add(itemPanelInner);
+            }
+        }
+
+        itemPanel.revalidate();
+        itemPanel.repaint();
+    }
+
+    private void searchItems() {
+        String query = searchField.getText().toLowerCase();
+        List<String> itemNames = new ArrayList<>(shopItemsMap.keySet());
+        Collections.sort(itemNames);
+        int index = Collections.binarySearch(itemNames, query);
+        if (index >= 0) {
+            Item foundItem = shopItemsMap.get(itemNames.get(index));
+            JOptionPane.showMessageDialog(shopFrame, "Found: " + foundItem.getType() + " - $" + foundItem.getPrice());
+        } else {
+            JOptionPane.showMessageDialog(shopFrame, "Item not found.");
+        }
+    }
+
+    private JPanel createStaticShopPanel(String[] items, int[] prices) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(0, 3, 10, 10));
         panel.setBackground(Color.LIGHT_GRAY);
@@ -92,7 +213,6 @@ public class Shop implements ActionListener {
         return panel;
     }
 
-
     public void showShop() {
         shopFrame.setVisible(true);
     }
@@ -100,52 +220,49 @@ public class Shop implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
-        handleItemPurchase(command);
+        if (command.equals("Ascending")) {
+            sortItems(true);
+            refreshShopPanel();
+        } else if (command.equals("Descending")) {
+            sortItems(false);
+            refreshShopPanel();
+        } else {
+            handleItemPurchase(command);
+        }
+    }
+
+    private void sortItems(boolean ascending) {
+        Collections.sort(shopItems, new SortByPrice(ascending));
+    }
+
+    private void refreshShopPanel() {
+        tabbedPane.setComponentAt(0, createShopPanel());
     }
 
     private void handleItemPurchase(String command) {
-        int price = 0;
-        if (isItem(command)) {
-            price = getPrice(command, ITEM_TYPES, ITEM_PRICES);
-            if (money >= price) {
-                money -= price;
-                selectedItem = new Item(command, Color.YELLOW, -50, -50);
-                items.add(selectedItem);
+        Item selectedItem = getItemByType(command);
+        if (selectedItem != null) {
+            int price = selectedItem.getPrice();
+            double currentMoney = driver.getMoney();
+            if (currentMoney >= price) {
+                currentMoney -= price;
+                driver.setMoney(currentMoney);
+                items.add(new Item(command, Color.YELLOW, -50, -50, price));
                 shopFrame.setVisible(false);
-                moneyPanel.setMoney(money);
                 driver.setSelectedItem(selectedItem);
-            } else {
-                showInsufficientFundsMessage();
-            }
-        } else if (isCat(command)) {
-            price = getPrice(command, CAT_TYPES, CAT_PRICES);
-            if (money >= price) {
-                money -= price;
-                selectedCat = new Cat(-50, -50, Color.YELLOW, "Happy");
-                cats.add(selectedCat);
-                shopFrame.setVisible(false);
-                moneyPanel.setMoney(money);
-                driver.setSelectedCat(selectedCat);
-            } else {
-                showInsufficientFundsMessage();
-            }
-        } else if (isEmployee(command)) {
-            price = getPrice(command, EMPLOYEE_TYPES, EMPLOYEE_PRICES);
-            if (money >= price) {
-                money -= price;
-                selectedEmployee = new Employee("New Employee", command, -50, -50);
-                employees.add(selectedEmployee);
-                shopFrame.setVisible(false);
-                moneyPanel.setMoney(money);
-                driver.setSelectedEmployee(selectedEmployee);
             } else {
                 showInsufficientFundsMessage();
             }
         }
     }
 
-    private boolean isItem(String command) {
-        return contains(command, ITEM_TYPES);
+    private Item getItemByType(String type) {
+        for (Item item : shopItems) {
+            if (item.getType().equals(type)) {
+                return item;
+            }
+        }
+        return null;
     }
 
     private boolean isCat(String command) {
@@ -163,16 +280,7 @@ public class Shop implements ActionListener {
         return false;
     }
 
-    private int getPrice(String command, String[] types, int[] prices) {
-        for (int i = 0; i < types.length; i++) {
-            if (types[i].equals(command)) {
-                return prices[i];
-            }
-        }
-        return 0;
-    }
-
     private void showInsufficientFundsMessage() {
-        JOptionPane.showMessageDialog(shopFrame, "You are broke (I only have $3).");
+        JOptionPane.showMessageDialog(shopFrame, "Not enough money to buy this item.");
     }
 }
