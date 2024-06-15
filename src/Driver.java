@@ -40,14 +40,18 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
     private int gameState = STATE_MENU;
     private BufferedImage menuImage;
+    private BufferedImage aboutImage;
+    private BufferedImage instructionImage;
 
     // Button "areas"
     private Rectangle startButtonArea = new Rectangle(240, 189, 320, 47);
     private Rectangle instructionsButtonArea = new Rectangle(240, 321, 320, 47);
     private Rectangle aboutButtonArea = new Rectangle(240, 452, 320, 47);
 
-    // In-game
+    // In-game, In-Instruction, In-About
     private Rectangle menuButtonArea = new Rectangle(9, 14, 101, 38);
+
+    // In-game
     private Rectangle shopButtonArea = new Rectangle(9, 60, 101, 38);
 
     public Driver() {
@@ -75,6 +79,8 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         try {
             menuImage = ImageIO.read(new File("menuImage.png"));
             backgroundImage = ImageIO.read(new File("backgroundImage.png"));
+            aboutImage = ImageIO.read(new File("aboutMenu.png"));
+            instructionImage = ImageIO.read(new File("instructionMenu.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -154,8 +160,20 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             if (selectedEmployee != null) {
                 selectedEmployee.render(g);
             }
-        } else if (gameState == STATE_INSTRUCTIONS) {
-            // Render instructions screen
+        }
+        else if(gameState == STATE_ABOUT)
+        {
+            if(aboutImage != null)
+            {
+                g.drawImage(aboutImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
+            }
+        }
+        else if (gameState == STATE_INSTRUCTIONS)
+        {
+            if(instructionImage != null)
+            {
+                g.drawImage(instructionImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
+            }
         }
     }
 
@@ -264,6 +282,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                         break;
                     }
                 }
+                repaint();
+            }
+        }
+        else if(gameState == STATE_ABOUT || gameState == STATE_INSTRUCTIONS)
+        {
+            if(menuButtonArea.contains(mouseX, mouseY))
+            {
+                gameState = STATE_MENU;
                 repaint();
             }
         }
