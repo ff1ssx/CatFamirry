@@ -68,6 +68,35 @@ public class Customer {
                 y = newY;
             }
 
+            if(newX >= 700)
+            {
+                if(newY < 550)
+                {
+                    x = newX;
+                }
+                else
+                {
+                    int lineNum = (int)(Math.random() * (2 - 1 + 1)) + 1;
+
+                    if(lineNum == 1)
+                    {
+                        while(y > 100)
+                        {
+                            y-=50;
+                        }
+                    }
+                    else if(lineNum == 2)
+                    {
+                        x = 750;
+
+                        while(y > 100)
+                        {
+                            y -= 50;
+                        }
+                    }
+                }
+            }
+
             if (random.nextInt(10) == 0) {
                 satisfaction -= 1;
             }
