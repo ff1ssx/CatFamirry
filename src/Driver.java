@@ -13,7 +13,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
     private static final int SCREEN_WIDTH = 800;
     private static final int SCREEN_HEIGHT = 600;
-    private static final int TILE_SIZE = 50;
+    protected static final int TILE_SIZE = 50;
 
     private ArrayList<Waste> wasteList;
     private Timer wasteTimer;
@@ -43,16 +43,18 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private BufferedImage aboutImage;
     private BufferedImage instructionImage;
 
+    private Timer customerTimer;
+
     // Button "areas"
     private Rectangle startButtonArea = new Rectangle(240, 189, 320, 47);
     private Rectangle instructionsButtonArea = new Rectangle(240, 321, 320, 47);
     private Rectangle aboutButtonArea = new Rectangle(240, 452, 320, 47);
 
     // In-game, In-Instruction, In-About
-    private Rectangle menuButtonArea = new Rectangle(9, 14, 101, 38);
+    private Rectangle menuButtonArea = new Rectangle(9, 5, 101, 38);
 
     // In-game
-    private Rectangle shopButtonArea = new Rectangle(9, 60, 101, 38);
+    private Rectangle shopButtonArea = new Rectangle(123, 5, 101, 38);
 
     public Driver() {
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -103,6 +105,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         wasteTimer = new Timer(13000, e -> spawnWaste());
         wasteTimer.start();
 
+        customerTimer = new Timer(1000, e -> manageCustomers());
+        customerTimer.start();
+
         revalidate();
         repaint();
     }
@@ -120,9 +125,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 g.drawImage(backgroundImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
             }
 
-            if (selectedItem != null || selectedCat != null || selectedEmployee != null) {
-                drawGrid(g);
-            }
+            drawGrid(g);
+
+            g.setColor(Color.RED);
+            g.fillRect(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE); // Entrance
+            g.setColor(Color.ORANGE);
+            g.fillRect(375 / TILE_SIZE * TILE_SIZE, 11 * TILE_SIZE, TILE_SIZE, TILE_SIZE); // Cashier
 
             for (Waste waste : wasteList) {
                 waste.render(g);
@@ -145,9 +153,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             }
 
             g.setFont(sherryFont);
-            g.setColor(Color.BLACK);
-            g.drawString("" + reputation, 545, 38);
-            g.drawString("" + money, 690, 38);
+            g.setColor(Color.WHITE);
+            g.drawString("" + reputation, 545, 33);
+            g.drawString("" + money, 690, 33);
 
             if (selectedItem != null) {
                 selectedItem.render(g);
@@ -160,18 +168,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             if (selectedEmployee != null) {
                 selectedEmployee.render(g);
             }
-        }
-        else if(gameState == STATE_ABOUT)
-        {
-            if(aboutImage != null)
-            {
+        } else if (gameState == STATE_ABOUT) {
+            if (aboutImage != null) {
                 g.drawImage(aboutImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
             }
-        }
-        else if (gameState == STATE_INSTRUCTIONS)
-        {
-            if(instructionImage != null)
-            {
+        } else if (gameState == STATE_INSTRUCTIONS) {
+            if (instructionImage != null) {
                 g.drawImage(instructionImage, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, this);
             }
         }
@@ -180,35 +182,39 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private void drawGrid(Graphics g) {
         g.setColor(new Color(200, 200, 200, 150));
         for (int x = 0; x < SCREEN_WIDTH; x += TILE_SIZE) {
-            for (int y = 0; y < SCREEN_HEIGHT; y += TILE_SIZE) {
+            for (int y = TILE_SIZE; y < SCREEN_HEIGHT; y += TILE_SIZE) {
                 g.drawRect(x, y, TILE_SIZE, TILE_SIZE);
             }
         }
     }
 
-    private void addCustomer() {
-        if (revolution > 0 && revolution <= 5) {
-            int randomNum = (int) (Math.random() * (3 - 1 + 1)) + 1;
+    private void manageCustomers() {
+        if (random.nextInt(100) < reputation) {
+            int imageIndex = random.nextInt(15) + 1;
+            int initialSatisfaction = random.nextInt(50) + 50;
+            customers.add(new Customer(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, initialSatisfaction, imageIndex, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT));
+        }
 
-            for (int i = 0; i <= randomNum; i++) {
-                customers.add(new Customer(600, 800));
-                repaint();
+        for (Customer customer : customers) {
+            if (customer.getSatisfaction() > 0) {
+                customer.move(items);
+            } else {
+                customer.moveToEntrance();
+                if (customer.getX() == 375 / TILE_SIZE * TILE_SIZE && customer.getY() == TILE_SIZE) {
+                    customer.leaveCafe();
+                }
             }
-        } else if (revolution > 5 && revolution <= 10) {
-            int randomNum = (int) (Math.random() * (7 - 1 + 1)) + 1;
 
-            for (int i = 0; i <= randomNum; i++) {
-                customers.add(new Customer(600, 800));
-                repaint();
-            }
-        } else if (revolution > 10) {
-            int randomNum = (int) (Math.random() * (15 - 1 + 1)) + 1;
-
-            for (int i = 0; i <= randomNum; i++) {
-                customers.add(new Customer(600, 800));
-                repaint();
+            if (customer.getX() == 375 / TILE_SIZE * TILE_SIZE && customer.getY() == 11 * TILE_SIZE && !customer.hasPaid()) {
+                customer.setHasPaid(true);
+                customer.setSatisfaction(0);
+                money += 10;
             }
         }
+
+        customers.removeIf(Customer::hasLeft);
+
+        repaint();
     }
 
     @Override
@@ -218,6 +224,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             spawnWaste();
         } else if (command.equals("Shop")) {
             shop.showShop();
+            pauseGame();
         } else if (command.equals("Start")) {
             gameState = STATE_GAME;
             setupGameComponents();
@@ -253,25 +260,29 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 setupMenuComponents();
             } else if (shopButtonArea.contains(mouseX, mouseY)) {
                 shop.showShop();
+                pauseGame();
             }
 
-            if (selectedItem != null) {
+            if (selectedItem != null && mouseY > TILE_SIZE) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
                 items.add(new Item(selectedItem.getType(), selectedItem.getColor(), snappedX, snappedY, selectedItem.getPrice()));
                 selectedItem = null;
+                resumeGame();
                 repaint();
-            } else if (selectedCat != null) {
+            } else if (selectedCat != null && mouseY > TILE_SIZE) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
                 cats.add(new Cat(snappedX, snappedY, selectedCat.getColor(), selectedCat.getMood()));
                 selectedCat = null;
+                resumeGame();
                 repaint();
-            } else if (selectedEmployee != null) {
+            } else if (selectedEmployee != null && mouseY > TILE_SIZE) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
                 employees.add(new Employee(selectedEmployee.getName(), selectedEmployee.getRole(), snappedX, snappedY));
                 selectedEmployee = null;
+                resumeGame();
                 repaint();
             } else {
                 for (int i = 0; i < wasteList.size(); i++) {
@@ -284,11 +295,8 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 }
                 repaint();
             }
-        }
-        else if(gameState == STATE_ABOUT || gameState == STATE_INSTRUCTIONS)
-        {
-            if(menuButtonArea.contains(mouseX, mouseY))
-            {
+        } else if (gameState == STATE_ABOUT || gameState == STATE_INSTRUCTIONS) {
+            if (menuButtonArea.contains(mouseX, mouseY)) {
                 gameState = STATE_MENU;
                 repaint();
             }
@@ -383,10 +391,11 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
     private void spawnWaste() {
         int x = random.nextInt(SCREEN_WIDTH - 50);
-        int y = random.nextInt(SCREEN_HEIGHT - 50);
+        int y = random.nextInt(SCREEN_HEIGHT - TILE_SIZE - 50) + TILE_SIZE;
         wasteList.add(new Waste(x, y));
         repaint();
     }
+
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Cat Famirry 사랑해 환희오빠");
@@ -418,5 +427,21 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     public void setMoney(double money) {
         this.money = money;
         repaint();
+    }
+
+    private void pauseGame() {
+        wasteTimer.stop();
+        customerTimer.stop();
+        for (Customer customer : customers) {
+            customer.setPaused(true);
+        }
+    }
+
+    public void resumeGame() {
+        wasteTimer.start();
+        customerTimer.start();
+        for (Customer customer : customers) {
+            customer.setPaused(false);
+        }
     }
 }

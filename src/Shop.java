@@ -75,6 +75,12 @@ public class Shop implements ActionListener {
 
         shopFrame.add(tabbedPane);
         shopFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        shopFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                driver.resumeGame();
+            }
+        });
     }
 
     private void addItemToShop(Item item) {
@@ -92,6 +98,12 @@ public class Shop implements ActionListener {
         itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         updateItemPanel("");
+
+        JScrollPane scrollPane = new JScrollPane(itemPanel);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BorderLayout());
@@ -130,7 +142,7 @@ public class Shop implements ActionListener {
         topPanel.add(buttonPanel, BorderLayout.EAST);
 
         panel.add(topPanel, BorderLayout.NORTH);
-        panel.add(itemPanel, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
@@ -171,19 +183,6 @@ public class Shop implements ActionListener {
 
         itemPanel.revalidate();
         itemPanel.repaint();
-    }
-
-    private void searchItems() {
-        String query = searchField.getText().toLowerCase();
-        List<String> itemNames = new ArrayList<>(shopItemsMap.keySet());
-        Collections.sort(itemNames);
-        int index = Collections.binarySearch(itemNames, query);
-        if (index >= 0) {
-            Item foundItem = shopItemsMap.get(itemNames.get(index));
-            JOptionPane.showMessageDialog(shopFrame, "Found: " + foundItem.getType() + " - $" + foundItem.getPrice());
-        } else {
-            JOptionPane.showMessageDialog(shopFrame, "Item not found.");
-        }
     }
 
     private JPanel createStaticShopPanel(String[] items, int[] prices) {
