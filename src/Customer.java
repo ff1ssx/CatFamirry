@@ -8,6 +8,7 @@ import javax.imageio.ImageIO;
 
 public class Customer {
     private int x, y;
+    private int targetX, targetY;
     private int satisfaction;
     private int imageIndex;
     private boolean hasPaid;
@@ -17,6 +18,8 @@ public class Customer {
     private Random random;
     private BufferedImage image;
     Font sherryFont;
+    private static final int MOVE_STEPS = 5;
+    private int stepsRemaining;
 
     public Customer(int x, int y, int satisfaction, int imageIndex, int tileSize, int screenWidth, int screenHeight) {
         try
@@ -32,6 +35,8 @@ public class Customer {
 
         this.x = x;
         this.y = y;
+        this.targetX = x;
+        this.targetY = y;
         this.satisfaction = satisfaction;
         this.imageIndex = imageIndex;
         this.tileSize = tileSize;
@@ -40,6 +45,7 @@ public class Customer {
         this.hasPaid = false;
         this.isPaused = false;
         this.random = new Random();
+        this.stepsRemaining = 0;
         loadImage();
     }
 
@@ -76,59 +82,46 @@ public class Customer {
 
     public void move(ArrayList<Item> items) {
         if (!isPaused && satisfaction > 0) {
-            int dx = random.nextInt(3) - 1;
-            int dy = random.nextInt(3) - 1;
+            if (stepsRemaining <= 0) {
+                stepsRemaining = random.nextInt(6) + MOVE_STEPS;
+                int direction = random.nextInt(4);
 
-            int newX = x + dx * tileSize;
-            int newY = y + dy * tileSize;
-
-            if (newY >= tileSize && !collidesWithItems(newX, newY, items)) {
-                x = newX;
-                y = newY;
-            }
-
-            if(newX >= 700)
-            {
-                if(newY < 550)
-                {
-                    x = newX;
+                switch (direction) {
+                    case 0: targetX = x + tileSize * stepsRemaining; targetY = y; break;
+                    case 1: targetX = x - tileSize * stepsRemaining; targetY = y; break;
+                    case 2: targetX = x; targetY = y + tileSize * stepsRemaining; break;
+                    case 3: targetX = x; targetY = y - tileSize * stepsRemaining; break;
                 }
-                else
-                {
-                    int lineNum = (int)(Math.random() * (2 - 1 + 1)) + 1;
 
-                    if(lineNum == 1)
-                    {
-                        while(y > 100)
-                        {
-                            y-=50;
-                        }
-                    }
-                    else if(lineNum == 2)
-                    {
-                        x = 750;
-
-                        while(y > 100)
-                        {
-                            y -= 50;
-                        }
-                    }
+                if (targetY < tileSize || targetY >= screenHeight || targetX < 0 || targetX >= screenWidth || collidesWithItems(targetX, targetY, items)) {
+                    targetX = x;
+                    targetY = y;
+                    stepsRemaining = 0;
                 }
-            }
+            } else {
+                if (x < targetX) x += 1;
+                if (x > targetX) x -= 1;
+                if (y < targetY) y += 1;
+                if (y > targetY) y -= 1;
 
-            if (random.nextInt(10) == 0) {
-                satisfaction -= 1;
+                if (x == targetX && y == targetY) {
+                    stepsRemaining = 0;
+                }
+
+                if (random.nextInt(10) == 0) {
+                    satisfaction -= 1;
+                }
             }
         }
     }
 
     public void moveToEntrance() {
         if (x < 375 / tileSize * tileSize) {
-            x += tileSize;
+            x += 1;
         } else if (x > 375 / tileSize * tileSize) {
-            x -= tileSize;
+            x -= 1;
         } else if (y > tileSize) {
-            y -= tileSize;
+            y -= 1;
         }
     }
 
