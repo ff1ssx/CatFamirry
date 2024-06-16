@@ -113,7 +113,7 @@ public class Customer {
                         x = newX;
                         y = newY;
                     } else {
-                        stepsRemaining = 0; // Stop moving if colliding
+                        stepsRemaining = 0;
                     }
 
                     if (x == targetX && y == targetY) {
