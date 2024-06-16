@@ -132,6 +132,16 @@ public class Customer {
         }
     }
 
+    public void moveToCashierTable() {
+        if (x < 700 / tileSize * tileSize) {
+            x += tileSize;
+        } else if (x > 700 / tileSize * tileSize) {
+            x -= tileSize;
+        } else if (y > tileSize) {
+            y -= tileSize;
+        }
+    }
+
     public boolean hasLeft() {
         return x == 375 / tileSize * tileSize && y == tileSize && satisfaction <= 0;
     }
