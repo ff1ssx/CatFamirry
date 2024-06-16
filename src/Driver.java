@@ -44,6 +44,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private BufferedImage instructionImage;
     private BufferedImage cashierTable;
     private BufferedImage line;
+    private BufferedImage entrance;
 
     private Timer customerTimer;
 
@@ -87,6 +88,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             instructionImage = ImageIO.read(new File("instructionMenu.png"));
             cashierTable = ImageIO.read(new File("Cashier Table.png"));
             line = ImageIO.read(new File("line.png"));
+            entrance = ImageIO.read(new File("entrance.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -131,8 +133,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
             drawGrid(g);
 
-            g.setColor(Color.RED);
-            g.fillRect(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE); // Entrance
+            g.drawImage(entrance, 375, 0, 25, 50, this); // Entrance
             g.drawImage(cashierTable, 700, 50, 100, 50, this); // Cashier
             g.drawImage(line, 700, 150, 5, 400, this);
             g.drawImage(line, 750, 150, 5, 400, this);
