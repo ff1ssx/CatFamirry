@@ -43,6 +43,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private BufferedImage aboutImage;
     private BufferedImage instructionImage;
     private BufferedImage cashierTable;
+    private BufferedImage line;
     private BufferedImage entrance;
 
     private Timer customerTimer;
@@ -86,6 +87,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             aboutImage = ImageIO.read(new File("aboutMenu.png"));
             instructionImage = ImageIO.read(new File("instructionMenu.png"));
             cashierTable = ImageIO.read(new File("Cashier Table.png"));
+            line = ImageIO.read(new File("line.png"));
             entrance = ImageIO.read(new File("entrance.png"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -97,6 +99,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     private void setupMenuComponents() {
+        stopAllTimers();
         revalidate();
         repaint();
     }
@@ -109,7 +112,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         wasteTimer = new Timer(13000, e -> spawnWaste());
         wasteTimer.start();
 
-        customerTimer = new Timer(1000, e -> manageCustomers());
+        customerTimer = new Timer(16, e -> manageCustomers());
         customerTimer.start();
 
         revalidate();
@@ -132,7 +135,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             drawGrid(g);
 
             g.drawImage(entrance, 375, 0, 25, 50, this); // Entrance
-            g.drawImage(cashierTable, 700, 50, 100, 50, this); // Cashier3
+            g.drawImage(cashierTable, 700, 50, 100, 50, this); // Cashier
+            g.drawImage(line, 700, 150, 5, 400, this);
+            g.drawImage(line, 750, 150, 5, 400, this);
 
             for (Waste waste : wasteList) {
                 waste.render(g);
@@ -191,22 +196,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     private void manageCustomers() {
-        if (random.nextInt(100) < reputation) {
-            int imageIndex = (int)(Math.random() * (15 - 1 + 1)) + 1;;
+        if (random.nextInt(100) < reputation / 30000) {
+            int imageIndex = random.nextInt(15) + 1;;
             int initialSatisfaction = random.nextInt(50) + 50;
             customers.add(new Customer(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, initialSatisfaction, imageIndex, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT));
         }
 
         for (Customer customer : customers) {
-            if (customer.getSatisfaction() > 0) {
-                customer.move(items);
-            } else {
-                customer.moveToCashierTable();
-                customer.moveToEntrance();
-                if (customer.getX() == 375 / TILE_SIZE * TILE_SIZE && customer.getY() == TILE_SIZE) {
-                    customer.leaveCafe();
-                }
-            }
+            customer.move(items);
 
             if (customer.getX() == 375 / TILE_SIZE * TILE_SIZE && customer.getY() == 11 * TILE_SIZE && !customer.hasPaid()) {
                 customer.setHasPaid(true);
@@ -215,10 +212,17 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             }
         }
 
-        customers.removeIf(Customer::hasLeft);
+        for (Customer customer : customers) {
+            if (customer.getSatisfaction() <= 0) {
+                customer.moveToEntrance();
+            }
+        }
+
+        customers.removeIf(customer -> customer.hasLeft());
 
         repaint();
     }
+
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -233,6 +237,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             setupGameComponents();
         } else if (command.equals("Instructions")) {
             gameState = STATE_INSTRUCTIONS;
+            stopAllTimers();
             repaint();
         } else if (command.equals("Menu")) {
             gameState = STATE_MENU;
@@ -240,6 +245,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
         repaint();
     }
+
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -441,10 +447,25 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     }
 
     public void resumeGame() {
-        wasteTimer.start();
-        customerTimer.start();
+        if (wasteTimer != null) {
+            wasteTimer.start();
+        }
+        if (customerTimer != null) {
+            customerTimer.start();
+        }
         for (Customer customer : customers) {
             customer.setPaused(false);
         }
     }
+
+
+    private void stopAllTimers() {
+        if (wasteTimer != null) {
+            wasteTimer.stop();
+        }
+        if (customerTimer != null) {
+            customerTimer.stop();
+        }
+    }
+
 }
