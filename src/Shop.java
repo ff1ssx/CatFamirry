@@ -51,20 +51,20 @@ public class Shop implements ActionListener {
         shopFrame.setLocationRelativeTo(null);
         shopFrame.setResizable(false);
 
-        addItemToShop(new Item("Table", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Left Chair", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Right Chair", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Sofa", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Tree", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Litter Box", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Food", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Can", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Toy 1", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Toy 2", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cat Comb", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Cake", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Coffee Machine", Color.YELLOW, 0, 0, 0));
-        addItemToShop(new Item("Ice Cream Machine", Color.YELLOW, 0, 0, 0));
+        addItemToShop(new Item("Table", Color.YELLOW, 0, 0, 30));
+        addItemToShop(new Item("Left Chair", Color.YELLOW, 0, 0, 15));
+        addItemToShop(new Item("Right Chair", Color.YELLOW, 0, 0, 15));
+        addItemToShop(new Item("Sofa", Color.YELLOW, 0, 0, 50));
+        addItemToShop(new Item("Cat Tree", Color.YELLOW, 0, 0, 50));
+        addItemToShop(new Item("Cat Litter Box", Color.YELLOW, 0, 0, 30));
+        addItemToShop(new Item("Cat Food", Color.YELLOW, 0, 0, 40));
+        addItemToShop(new Item("Cat Can", Color.YELLOW, 0, 0, 60));
+        addItemToShop(new Item("Cat Toy 1", Color.YELLOW, 0, 0, 30));
+        addItemToShop(new Item("Cat Toy 2", Color.YELLOW, 0, 0, 30));
+        addItemToShop(new Item("Cat Comb", Color.YELLOW, 0, 0, 45));
+        addItemToShop(new Item("Cake", Color.YELLOW, 0, 0, 50));
+        addItemToShop(new Item("Coffee Machine", Color.YELLOW, 0, 0, 100));
+        addItemToShop(new Item("Ice Cream Machine", Color.YELLOW, 0, 0, 100));
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(sherryFont);
