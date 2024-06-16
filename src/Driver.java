@@ -43,7 +43,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private BufferedImage aboutImage;
     private BufferedImage instructionImage;
     private BufferedImage cashierTable;
-    private BufferedImage line;
     private BufferedImage entrance;
 
     private Timer customerTimer;
@@ -87,7 +86,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             aboutImage = ImageIO.read(new File("aboutMenu.png"));
             instructionImage = ImageIO.read(new File("instructionMenu.png"));
             cashierTable = ImageIO.read(new File("Cashier Table.png"));
-            line = ImageIO.read(new File("line.png"));
             entrance = ImageIO.read(new File("entrance.png"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,8 +134,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
             g.drawImage(entrance, 375, 0, 25, 50, this); // Entrance
             g.drawImage(cashierTable, 700, 50, 100, 50, this); // Cashier
-            g.drawImage(line, 700, 150, 5, 400, this);
-            g.drawImage(line, 750, 150, 5, 400, this);
 
             for (Waste waste : wasteList) {
                 waste.render(g);
@@ -213,7 +209,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
 
         for (Customer customer : customers) {
-            if (customer.getSatisfaction() <= 0) {
+            if (customer.getSatisfaction() <= 0)
+            {
+                customer.moveToCashierTable();
                 customer.moveToEntrance();
             }
         }
