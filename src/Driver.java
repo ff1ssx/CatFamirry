@@ -96,12 +96,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
+    // Setup menu components
     private void setupMenuComponents() {
         stopAllTimers();
         revalidate();
         repaint();
     }
 
+    // Setup game components
     private void setupGameComponents() {
         removeAll();
 
@@ -182,43 +184,54 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
+    // Draw the grid for the game
     private void drawGrid(Graphics g) {
-        g.setColor(new Color(200, 200, 200, 150));
         for (int x = 0; x < SCREEN_WIDTH; x += TILE_SIZE) {
             for (int y = TILE_SIZE; y < SCREEN_HEIGHT; y += TILE_SIZE) {
+                if (selectedItem != null || selectedCat != null || selectedEmployee != null) {
+                    g.setColor(new Color(150, 150, 150, 150));
+                } else {
+                    g.setColor(new Color(200, 200, 200, 150));
+                }
                 g.drawRect(x, y, TILE_SIZE, TILE_SIZE);
             }
         }
     }
 
+    // Manage customer movement and actions
     private void manageCustomers() {
-        if (random.nextInt(100) < reputation / 30000) {
-            int imageIndex = random.nextInt(15) + 1;;
+        if (random.nextInt(300) < reputation / 30000) {
+            int imageIndex = random.nextInt(15) + 1;
             int initialSatisfaction = random.nextInt(50) + 50;
             customers.add(new Customer(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, initialSatisfaction, imageIndex, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT));
         }
 
-        for (Customer customer : customers) {
-            customer.move(items);
+        Iterator<Customer> iterator = customers.iterator();
+        while (iterator.hasNext()) {
+            Customer customer = iterator.next();
+            if (!customer.hasPaid()) {
+                customer.moveToCashierTable(items);
+                int cashierX1 = (SCREEN_WIDTH / TILE_SIZE - 2) * TILE_SIZE;
+                int cashierX2 = (SCREEN_WIDTH / TILE_SIZE - 1) * TILE_SIZE;
+                int cashierY = TILE_SIZE;
 
-            if (customer.getX() == 375 / TILE_SIZE * TILE_SIZE && customer.getY() == 11 * TILE_SIZE && !customer.hasPaid()) {
-                customer.setHasPaid(true);
-                customer.setSatisfaction(0);
-                money += 10;
+                if ((customer.getX() == cashierX1 || customer.getX() == cashierX2) && customer.getY() == cashierY) {
+                    customer.setHasPaid(true);
+                    money += 5;
+                }
+            } else if (customer.getSatisfaction() > 0) {
+                customer.move(items);
+            } else {
+                customer.moveToEntrance(items);
+                if (customer.hasReachedEntrance()) {
+                    iterator.remove();
+                }
             }
         }
-
-        for (Customer customer : customers) {
-            if (customer.getSatisfaction() <= 0)
-            {
-                customer.moveToEntrance();
-            }
-        }
-
-        customers.removeIf(customer -> customer.hasLeft());
 
         repaint();
     }
+
 
 
     @Override
@@ -395,6 +408,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     public void mouseExited(MouseEvent e) {
     }
 
+    // Spawn waste in the game
     private void spawnWaste() {
         int x = random.nextInt(SCREEN_WIDTH - 50);
         int y = random.nextInt(SCREEN_HEIGHT - TILE_SIZE - 50) + TILE_SIZE;
@@ -435,6 +449,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         repaint();
     }
 
+    // Pause the game
     private void pauseGame() {
         wasteTimer.stop();
         customerTimer.stop();
@@ -443,6 +458,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
+    // Resume the game
     public void resumeGame() {
         if (wasteTimer != null) {
             wasteTimer.start();
@@ -455,7 +471,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-
+    // Stop all timers in the game
     private void stopAllTimers() {
         if (wasteTimer != null) {
             wasteTimer.stop();

@@ -20,16 +20,14 @@ public class Customer {
     Font sherryFont;
     private static final int MOVE_STEPS = 5;
     private int stepsRemaining;
+    private boolean headingToCashier;
 
     public Customer(int x, int y, int satisfaction, int imageIndex, int tileSize, int screenWidth, int screenHeight) {
-        try
-        {
+        try {
             sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(12f);
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(sherryFont);
-        }
-        catch (IOException | FontFormatException e)
-        {
+        } catch (IOException | FontFormatException e) {
             e.printStackTrace();
         }
 
@@ -44,6 +42,7 @@ public class Customer {
         this.screenHeight = screenHeight;
         this.hasPaid = false;
         this.isPaused = false;
+        this.headingToCashier = true;
         this.random = new Random();
         this.stepsRemaining = 0;
         loadImage();
@@ -82,75 +81,134 @@ public class Customer {
 
     public void move(ArrayList<Item> items) {
         if (!isPaused && satisfaction > 0) {
-            if (stepsRemaining <= 0) {
-                stepsRemaining = random.nextInt(6) + MOVE_STEPS;
-                int direction = random.nextInt(4);
-
-                switch (direction) {
-                    case 0: targetX = x + tileSize * stepsRemaining; targetY = y; break;
-                    case 1: targetX = x - tileSize * stepsRemaining; targetY = y; break;
-                    case 2: targetX = x; targetY = y + tileSize * stepsRemaining; break;
-                    case 3: targetX = x; targetY = y - tileSize * stepsRemaining; break;
-                }
-
-                if (targetY < tileSize || targetY >= screenHeight || targetX < 0 || targetX >= screenWidth || collidesWithItems(targetX, targetY, items)) {
-                    targetX = x;
-                    targetY = y;
-                    stepsRemaining = 0;
-                }
+            if (headingToCashier) {
+                moveToCashierTable(items);
             } else {
-                if (x < targetX) x += 1;
-                if (x > targetX) x -= 1;
-                if (y < targetY) y += 1;
-                if (y > targetY) y -= 1;
+                if (stepsRemaining <= 0) {
+                    stepsRemaining = random.nextInt(6) + MOVE_STEPS;
+                    int direction = random.nextInt(4);
 
-                if (x == targetX && y == targetY) {
-                    stepsRemaining = 0;
-                }
+                    switch (direction) {
+                        case 0: targetX = x + tileSize * stepsRemaining; targetY = y; break;
+                        case 1: targetX = x - tileSize * stepsRemaining; targetY = y; break;
+                        case 2: targetX = x; targetY = y + tileSize * stepsRemaining; break;
+                        case 3: targetX = x; targetY = y - tileSize * stepsRemaining; break;
+                    }
 
-                if (random.nextInt(10) == 0) {
-                    satisfaction -= 1;
+                    if (targetY < tileSize || targetY >= screenHeight || targetX < 0 || targetX >= screenWidth || collidesWithItems(targetX, targetY, items)) {
+                        targetX = x;
+                        targetY = y;
+                        stepsRemaining = 0;
+                    }
+                } else {
+                    int newX = x;
+                    int newY = y;
+
+                    if (x < targetX) newX += 1;
+                    if (x > targetX) newX -= 1;
+                    if (y < targetY) newY += 1;
+                    if (y > targetY) newY -= 1;
+
+                    if (!collidesWithItems(newX, newY, items) && !isCollidingWithCashier(newX, newY)) {
+                        x = newX;
+                        y = newY;
+                    } else {
+                        stepsRemaining = 0; // Stop moving if colliding
+                    }
+
+                    if (x == targetX && y == targetY) {
+                        stepsRemaining = 0;
+                    }
+
+                    if (random.nextInt(10) == 0) {
+                        satisfaction -= 1;
+                    }
                 }
             }
         }
     }
 
-    public void moveToEntrance() {
-        if (x < 375 / tileSize * tileSize) {
-            x += 1;
-        } else if (x > 375 / tileSize * tileSize) {
-            x -= 1;
-        } else if (y > tileSize) {
-            y -= 1;
+    public void moveToCashierTable(ArrayList<Item> items) {
+        int cashierX1 = (screenWidth / tileSize - 2) * tileSize;
+        int cashierX2 = (screenWidth / tileSize - 1) * tileSize;
+        int cashierY = tileSize;
+
+        int newX = x;
+        int newY = y;
+
+        if (y < cashierY && !collidesWithItems(x, y + 1, items)) {
+            newY += 1;
+        } else if (x < cashierX1 && !collidesWithItems(x + 1, y, items)) {
+            newX += 1;
+        } else if (x > cashierX2 && !collidesWithItems(x - 1, y, items)) {
+            newX -= 1;
+        } else {
+            headingToCashier = false;
+        }
+
+        if (!collidesWithItems(newX, newY, items)) {
+            x = newX;
+            y = newY;
         }
     }
 
-    public void moveToCashierTable() {
-        if (x < 700 / tileSize * tileSize) {
-            x += tileSize;
-        } else if (x > 700 / tileSize * tileSize) {
-            x -= tileSize;
-        } else if (y > tileSize) {
-            y -= tileSize;
+    public void moveToEntrance(ArrayList<Item> items) {
+        int entranceX = 375 / tileSize * tileSize;
+        int entranceY = tileSize;
+
+        int newX = x;
+        int newY = y;
+
+        if (x != entranceX) {
+            if (x < entranceX && !collidesWithItems(x + 1, y, items)) {
+                newX += 1;
+            } else if (x > entranceX && !collidesWithItems(x - 1, y, items)) {
+                newX -= 1;
+            }
+        } else if (y != entranceY) {
+            if (y > entranceY && !collidesWithItems(x, y - 1, items)) {
+                newY -= 1;
+            } else if (y < entranceY && !collidesWithItems(x, y + 1, items)) {
+                newY += 1;
+            }
         }
+
+        if (!collidesWithItems(newX, newY, items)) {
+            x = newX;
+            y = newY;
+        }
+    }
+
+    public boolean hasReachedEntrance() {
+        int entranceX = 375 / tileSize * tileSize;
+        int entranceY = tileSize;
+        return x == entranceX && y == entranceY;
+    }
+
+    public boolean isHeadingToCashier() {
+        return headingToCashier;
     }
 
     public boolean hasLeft() {
         return x == 375 / tileSize * tileSize && y == tileSize && satisfaction <= 0;
     }
 
-    public void leaveCafe() {
-        x = -1;
-        y = -1;
-    }
-
     private boolean collidesWithItems(int x, int y, ArrayList<Item> items) {
         for (Item item : items) {
-            if (item.contains(x, y)) {
+            if (x < item.getX() + item.getWidth() &&
+                    x + tileSize > item.getX() &&
+                    y < item.getY() + item.getHeight() &&
+                    y + tileSize > item.getY()) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean isCollidingWithCashier(int x, int y) {
+        int cashierX = 375 / tileSize * tileSize;
+        int cashierY = 11 * tileSize;
+        return (x < cashierX + tileSize && x + tileSize > cashierX && y < cashierY + tileSize && y + tileSize > cashierY);
     }
 
     public void interactWithItem() {
