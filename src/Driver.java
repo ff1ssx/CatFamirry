@@ -292,7 +292,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             } else if (selectedCat != null && mouseY > TILE_SIZE) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-                cats.add(new Cat(snappedX, snappedY, selectedCat.getColor(), selectedCat.getMood()));
+                cats.add(new Cat(selectedCat.getType(), selectedCat.getColor(), selectedCat.getMood(), snappedX, snappedY, selectedCat.getPrice()));
                 selectedCat = null;
                 resumeGame();
                 repaint();

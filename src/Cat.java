@@ -14,6 +14,8 @@ public class Cat
     private Color color;
     private String mood;
     private Image catImage;
+    private String type;
+    private int price;
 
     // Getters & Setters
     public int getX()
@@ -26,14 +28,21 @@ public class Cat
         return y;
     }
 
-    public Color getColor()
-    {
+    public String getType() {
+        return type;
+    }
+
+    public Color getColor() {
         return color;
     }
 
     public String getMood()
     {
         return mood;
+    }
+
+    public int getPrice() {
+        return price;
     }
 
     public void setX(int x)
@@ -46,63 +55,74 @@ public class Cat
         this.y = y;
     }
 
-    public Cat(int x, int y, Color color, String mood)
+    public Cat(String type, Color color, String mood, int x, int y, int price)
     {
+        this.type = type;
+        this.mood = mood;
+        this.color = color;
         this.x = x;
         this.y = y;
-        this.color = color;
-        this.mood = mood;
-        width = 30;
-        height = 10;
-
-        int randomNum = (int)(Math.random() * (10 - 1 + 1)) + 1;
-        this.imageName = "cat" + randomNum;
+        this.width = 50;
+        this.height = 50;
+        this.price = price;
+        loadImage();
     }
 
-    public void move(Graphics g)
+    private void loadImage()
     {
-        int randomNum = (int)(Math.random() * (5 - 1 + 1)) + 1;
-
         try
         {
-            if(randomNum == 1)
-            {
-                imageName = "cuddling_"+ imageName;
-                ImageIO.read(new File(imageName));
-                g.drawImage(catImage, x, y, width, height, null);
-            }
-            else if(randomNum == 2)
-            {
-                imageName = "sleeping_"+ imageName;
-                ImageIO.read(new File(imageName));
-                g.drawImage(catImage, x, y, width, height, null);
-            }
-            else if(randomNum == 3)
-            {
-                imageName = "cleaning_"+ imageName;
-                ImageIO.read(new File(imageName));
-                g.drawImage(catImage, x, y, width, height, null);
-            }
-            else if(randomNum == 4)
-            {
-                imageName = "chasing_"+ imageName;
-                ImageIO.read(new File(imageName));
-                g.drawImage(catImage, x, y, width, height, null);
-            }
-            else if(randomNum == 5)
-            {
-                imageName = "stretching_"+ imageName;
-                ImageIO.read(new File(imageName));
-                g.drawImage(catImage, x, y, width, height, null);
-            }
-            else
-            {
-                x+=5;
-                y+=5;
-                g.drawImage(catImage, x, y, width, height, null);
+            switch (type) {
+                case "Bombay":
+                    catImage = ImageIO.read(new File("Bombay.png"));
+                    break;
+                case "Orange":
+                    catImage = ImageIO.read(new File("Orange.png"));
+                    break;
+                case "Tabby":
+                    catImage = ImageIO.read(new File("Tabby.png"));
+                    break;
+                case "White":
+                    catImage = ImageIO.read(new File("White.png"));
+                    break;
+                case "British Shorthair":
+                    catImage = ImageIO.read(new File("British Shorthair.png"));
+                    break;
+                case "Maine Coon":
+                    catImage = ImageIO.read(new File("Maine Coon.png"));
+                    break;
+                case "Ragdoll":
+                    catImage = ImageIO.read(new File("Ragdoll.png"));
+                    break;
+                case "American Shorthair":
+                    catImage = ImageIO.read(new File("American Shorthair.png"));
+                    break;
+                case "Siamese":
+                    catImage = ImageIO.read(new File("Siamese.png"));
+                    break;
+                case "Calico":
+                    catImage = ImageIO.read(new File("Calico.png"));
+                    break;
+                case "Li Hua":
+                    catImage = ImageIO.read(new File("Li Hua.png"));
+                    break;
+                case "Russian Blue":
+                    catImage = ImageIO.read(new File("Russian Blue.png"));
+                    break;
+                case "Balinese":
+                    catImage = ImageIO.read(new File("Balinese.png"));
+                    break;
+                case "Persian":
+                    catImage = ImageIO.read(new File("Persian.png"));
+                    break;
+                case "RagaMuffin":
+                    catImage = ImageIO.read(new File("RagaMuffin.png"));
+                    break;
+                default:
+                    catImage = null;
             }
         }
-        catch(IOException e)
+        catch (IOException e)
         {
             e.printStackTrace();
         }
@@ -110,16 +130,15 @@ public class Cat
 
     public void render(Graphics g)
     {
-        try
+        if (catImage != null)
         {
-            catImage = ImageIO.read(new File(imageName));
+            g.drawImage(catImage, x, y, width, height, null);
         }
-        catch(IOException e)
+        else
         {
-            e.printStackTrace();
+            g.setColor(color);
+            g.fillRect(x, y, width, height); // Placeholder
         }
-
-        g.drawImage(catImage, x, y, width, height, null);
     }
 
     public boolean contains(int mouseX, int mouseY)
