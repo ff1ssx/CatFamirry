@@ -16,8 +16,20 @@ public class Customer {
     private int screenWidth, screenHeight;
     private Random random;
     private BufferedImage image;
+    Font sherryFont;
 
     public Customer(int x, int y, int satisfaction, int imageIndex, int tileSize, int screenWidth, int screenHeight) {
+        try
+        {
+            sherryFont = Font.createFont(Font.TRUETYPE_FONT, new File("Neucha-Regular.ttf")).deriveFont(12f);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(sherryFont);
+        }
+        catch (IOException | FontFormatException e)
+        {
+            e.printStackTrace();
+        }
+
         this.x = x;
         this.y = y;
         this.satisfaction = satisfaction;
@@ -43,16 +55,23 @@ public class Customer {
         }
     }
 
-    public void render(Graphics g) {
-        if (image != null) {
+    public void render(Graphics g)
+    {
+        g.setColor(new Color(250, 250, 250, 150));
+        g.fillRect(x, y-10, 50, 10);
+
+        if (image != null)
+        {
+            g.setColor(Color.BLACK);
+            g.setFont(sherryFont);
+            g.drawString("" + satisfaction, x + 20, y);
             g.drawImage(image, x, y, tileSize, tileSize, null);
-        } else {
+        }
+        else
+        {
             g.setColor(Color.RED);
             g.fillRect(x, y, tileSize, tileSize); // Placeholder
         }
-
-        g.setColor(Color.BLACK);
-        g.drawString(String.valueOf(satisfaction), x + 20, y + 30);
     }
 
     public void move(ArrayList<Item> items) {
