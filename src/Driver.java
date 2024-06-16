@@ -196,7 +196,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
     private void manageCustomers() {
         if (random.nextInt(100) < reputation) {
-            int imageIndex = random.nextInt(15) + 1;
+            int imageIndex = (int)(Math.random() * (15 - 1 + 1)) + 1;;
             int initialSatisfaction = random.nextInt(50) + 50;
             customers.add(new Customer(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, initialSatisfaction, imageIndex, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT));
         }
