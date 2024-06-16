@@ -211,7 +211,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         for (Customer customer : customers) {
             if (customer.getSatisfaction() <= 0)
             {
-                customer.moveToCashierTable();
                 customer.moveToEntrance();
             }
         }
