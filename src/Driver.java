@@ -1,3 +1,18 @@
+/*
+Names: Harry Lee, Sherry Sun
+Date: 2024-06-16
+Program Description: This program simulates a minimalistic management game where players manage a cat-themed shop.
+Players can place items and cats to earn money and reputation which attracts more customers. This game includes mini
+tasks such as customer interaction management, waste cleaning, etc.
+ */
+
+/*
+Class Description: The Driver class is the main class of the program, handling the game state, rendering, and
+interactions. It extends JPanel and implements ActionListener, MouseListener, and MouseMotionListener to handle user
+input and game updates. The class manages the game state, including the menu, game, instructions, and about screens.
+It also handles the creation and management of game components like customers, items, and waste.
+ */
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -18,17 +33,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     private ArrayList<Waste> wasteList;
     private Timer wasteTimer;
     private ArrayList<Item> items;
-    private ArrayList<Cat> cats;
-    private ArrayList<Employee> employees;
     private HashSet<Item> uniqueItems;
     private ArrayList<Customer> customers;
-    private double money = 100.0;
+    public double money = 100.0;
     private double reputation = 100.0;
     private int revolution = 0;
-    private Item selectedItem;
-    private Cat selectedCat;
-    private Employee selectedEmployee;
-    private Random random = new Random();
+    private Item selectedItem;private Random random = new Random();
     private Shop shop;
     private Point dragOffset;
     private BufferedImage backgroundImage;
@@ -58,6 +68,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     // In-game
     private Rectangle shopButtonArea = new Rectangle(123, 5, 101, 38);
 
+    private static final int MAX_WASTE_COUNT = 10;
+    private static final int MAX_CUSTOMER_COUNT = 10;
+
+    /**
+     * Constructor for the Driver class. Initializes game components.
+     */
     public Driver() {
         setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         setBackground(Color.WHITE);
@@ -67,8 +83,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
         wasteList = new ArrayList<>();
         items = new ArrayList<>();
-        cats = new ArrayList<>();
-        employees = new ArrayList<>();
         customers = new ArrayList<>();
         uniqueItems = new HashSet<>();
 
@@ -91,27 +105,33 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             e.printStackTrace();
         }
 
+        shop = new Shop(sherryFont, money, items, this);
+
         if (gameState == STATE_MENU) {
             setupMenuComponents();
         }
     }
 
-    // Setup menu components
+    /**
+     * Sets up the menu components.
+     */
     private void setupMenuComponents() {
         stopAllTimers();
         revalidate();
         repaint();
     }
 
-    // Setup game components
+    /**
+     * Sets up the game components.
+     */
     private void setupGameComponents() {
         removeAll();
 
-        shop = new Shop(sherryFont, money, items, cats, employees, this);
-
-        wasteTimer = new Timer(13000, e -> spawnWaste());
+        // Start waste timer
+        wasteTimer = new Timer(33000, e -> spawnWaste());
         wasteTimer.start();
 
+        // Start customer timer
         customerTimer = new Timer(16, e -> manageCustomers());
         customerTimer.start();
 
@@ -119,6 +139,10 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         repaint();
     }
 
+    /**
+     * Paints the component based on the current game state.
+     * @param g Graphics object used to draw the component.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -137,26 +161,22 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             g.drawImage(entrance, 375, 0, 25, 50, this); // Entrance
             g.drawImage(cashierTable, 700, 50, 100, 50, this); // Cashier
 
+            // Render all waste items
             for (Waste waste : wasteList) {
                 waste.render(g);
             }
 
+            // Render all items
             for (Item item : items) {
                 item.render(g);
             }
 
-            for (Cat cat : cats) {
-                cat.render(g);
-            }
-
-            for (Employee employee : employees) {
-                employee.render(g);
-            }
-
+            // Render all customers
             for (Customer customer : customers) {
                 customer.render(g);
             }
 
+            // Display reputation and money
             g.setFont(sherryFont);
             g.setColor(Color.WHITE);
             g.drawString("" + reputation, 545, 33);
@@ -164,14 +184,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
 
             if (selectedItem != null) {
                 selectedItem.render(g);
-            }
-
-            if (selectedCat != null) {
-                selectedCat.render(g);
-            }
-
-            if (selectedEmployee != null) {
-                selectedEmployee.render(g);
             }
         } else if (gameState == STATE_ABOUT) {
             if (aboutImage != null) {
@@ -184,11 +196,14 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-    // Draw the grid for the game
+    /**
+     * Draws the grid for the game.
+     * @param g Graphics object used to draw the grid.
+     */
     private void drawGrid(Graphics g) {
         for (int x = 0; x < SCREEN_WIDTH; x += TILE_SIZE) {
             for (int y = TILE_SIZE; y < SCREEN_HEIGHT; y += TILE_SIZE) {
-                if (selectedItem != null || selectedCat != null || selectedEmployee != null) {
+                if (selectedItem != null) {
                     g.setColor(new Color(150, 150, 150, 150));
                 } else {
                     g.setColor(new Color(200, 200, 200, 150));
@@ -198,14 +213,18 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-    // Manage customer movement and actions
+    /**
+     * Manages the movement and actions of customers.
+     */
     private void manageCustomers() {
-        if (random.nextInt(300) < reputation / 30000) {
+        // Check if more customers can be added
+        if (customers.size() < MAX_CUSTOMER_COUNT && random.nextInt(300) < reputation / 3000) {
             int imageIndex = random.nextInt(15) + 1;
             int initialSatisfaction = random.nextInt(50) + 50;
             customers.add(new Customer(375 / TILE_SIZE * TILE_SIZE, TILE_SIZE, initialSatisfaction, imageIndex, TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT));
         }
 
+        // Iterate through the customer list to update their state
         Iterator<Customer> iterator = customers.iterator();
         while (iterator.hasNext()) {
             Customer customer = iterator.next();
@@ -215,12 +234,12 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 int cashierX2 = (SCREEN_WIDTH / TILE_SIZE - 1) * TILE_SIZE;
                 int cashierY = TILE_SIZE;
 
-                if ((customer.getX() == cashierX1 || customer.getX() == cashierX2) && customer.getY() == cashierY) {
+                if ((customer.getX() == cashierX1 || customer.getX() == cashierX2) && customer.getY() == cashierY && !customer.isPaying()) {
                     customer.setHasPaid(true);
                     money += 5;
                 }
             } else if (customer.getSatisfaction() > 0) {
-                customer.move(items);
+                customer.move(items, this);
             } else {
                 customer.moveToEntrance(items);
                 if (customer.hasReachedEntrance()) {
@@ -232,8 +251,10 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         repaint();
     }
 
-
-
+    /**
+     * Handles various action events.
+     * @param e ActionEvent object.
+     */
     @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
@@ -256,7 +277,10 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         repaint();
     }
 
-
+    /**
+     * Handles mouse click events.
+     * @param e MouseEvent object.
+     */
     @Override
     public void mouseClicked(MouseEvent e) {
         int mouseX = e.getX();
@@ -282,6 +306,7 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 pauseGame();
             }
 
+            // Check if an item is selected and place it in the game
             if (selectedItem != null && mouseY > TILE_SIZE) {
                 int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
                 int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
@@ -289,27 +314,31 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 selectedItem = null;
                 resumeGame();
                 repaint();
-            } else if (selectedCat != null && mouseY > TILE_SIZE) {
-                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-                cats.add(new Cat(selectedCat.getType(), selectedCat.getColor(), selectedCat.getMood(), snappedX, snappedY, selectedCat.getPrice()));
-                selectedCat = null;
-                resumeGame();
-                repaint();
-            } else if (selectedEmployee != null && mouseY > TILE_SIZE) {
-                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-                employees.add(new Employee(selectedEmployee.getName(), selectedEmployee.getRole(), snappedX, snappedY));
-                selectedEmployee = null;
-                resumeGame();
-                repaint();
             } else {
-                for (int i = 0; i < wasteList.size(); i++) {
-                    Waste waste = wasteList.get(i);
-                    if (waste.contains(mouseX, mouseY)) {
-                        wasteList.remove(i);
-                        reputation += 5.0;
-                        break;
+                boolean interacted = false;
+                // Check for customer interactions with items
+                for (Customer customer : customers) {
+                    if (customer.contains(mouseX, mouseY)) {
+                        for (Item item : items) {
+                            if (Math.abs(customer.getX() - item.getX()) <= TILE_SIZE && Math.abs(customer.getY() - item.getY()) <= TILE_SIZE) {
+                                customer.interactWithItem(item, this);
+                                interacted = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (interacted) break;
+                }
+
+                // Check for waste interactions
+                if (!interacted) {
+                    for (int i = 0; i < wasteList.size(); i++) {
+                        Waste waste = wasteList.get(i);
+                        if (waste.contains(mouseX, mouseY)) {
+                            wasteList.remove(i);
+                            reputation += 5.0;
+                            break;
+                        }
                     }
                 }
                 repaint();
@@ -322,6 +351,10 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
+    /**
+     * Handles mouse press events.
+     * @param e MouseEvent object.
+     */
     @Override
     public void mousePressed(MouseEvent e) {
         if (gameState == STATE_GAME) {
@@ -330,26 +363,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                     dragOffset = new Point(e.getX() - item.getX(), e.getY() - item.getY());
                     selectedItem = item;
                     items.remove(item);
-                    repaint();
-                    break;
-                }
-            }
-
-            for (Cat cat : cats) {
-                if (cat.contains(e.getX(), e.getY())) {
-                    dragOffset = new Point(e.getX() - cat.getX(), e.getY() - cat.getY());
-                    selectedCat = cat;
-                    cats.remove(cat);
-                    repaint();
-                    break;
-                }
-            }
-
-            for (Employee employee : employees) {
-                if (employee.contains(e.getX(), e.getY())) {
-                    dragOffset = new Point(e.getX() - employee.getX(), e.getY() - employee.getY());
-                    selectedEmployee = employee;
-                    employees.remove(employee);
                     repaint();
                     break;
                 }
@@ -374,22 +387,6 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
                 selectedItem.setX(snappedX);
                 selectedItem.setY(snappedY);
                 repaint();
-            } else if (selectedCat != null) {
-                int mouseX = e.getX();
-                int mouseY = e.getY();
-                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-                selectedCat.setX(snappedX);
-                selectedCat.setY(snappedY);
-                repaint();
-            } else if (selectedEmployee != null) {
-                int mouseX = e.getX();
-                int mouseY = e.getY();
-                int snappedX = (mouseX / TILE_SIZE) * TILE_SIZE;
-                int snappedY = (mouseY / TILE_SIZE) * TILE_SIZE;
-                selectedEmployee.setX(snappedX);
-                selectedEmployee.setY(snappedY);
-                repaint();
             }
         }
     }
@@ -408,17 +405,20 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
     public void mouseExited(MouseEvent e) {
     }
 
-    // Spawn waste in the game
+    /**
+     * Spawns a waste item in the game.
+     */
     private void spawnWaste() {
-        int x = random.nextInt(SCREEN_WIDTH - 50);
-        int y = random.nextInt(SCREEN_HEIGHT - TILE_SIZE - 50) + TILE_SIZE;
-        wasteList.add(new Waste(x, y));
-        repaint();
+        if (wasteList.size() < MAX_WASTE_COUNT) {
+            int x = random.nextInt(SCREEN_WIDTH - 50);
+            int y = random.nextInt(SCREEN_HEIGHT - TILE_SIZE - 50) + TILE_SIZE;
+            wasteList.add(new Waste(x, y));
+            repaint();
+        }
     }
 
-
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Cat Famirry 사랑해 환희오빠");
+        JFrame frame = new JFrame("Cat Famirry");
         Driver gamePanel = new Driver();
         frame.add(gamePanel);
         frame.pack();
@@ -428,28 +428,51 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         frame.setVisible(true);
     }
 
+    /**
+     * Sets the selected item.
+     * @param item The item to set as selected.
+     */
     public void setSelectedItem(Item item) {
         this.selectedItem = item;
     }
 
-    public void setSelectedCat(Cat cat) {
-        this.selectedCat = cat;
-    }
-
-    public void setSelectedEmployee(Employee employee) {
-        this.selectedEmployee = employee;
-    }
-
+    /**
+     * Gets the current amount of money.
+     * @return The current amount of money.
+     */
     public double getMoney() {
         return money;
     }
 
+    /**
+     * Sets the amount of money.
+     * @param money The amount of money to set.
+     */
     public void setMoney(double money) {
         this.money = money;
         repaint();
     }
 
-    // Pause the game
+    /**
+     * Gets the current reputation.
+     * @return The current reputation.
+     */
+    public double getReputation() {
+        return reputation;
+    }
+
+    /**
+     * Sets the reputation.
+     * @param reputation The reputation to set.
+     */
+    public void setReputation(double reputation) {
+        this.reputation = reputation;
+        repaint();
+    }
+
+    /**
+     * Pauses the game by stopping all timers and pausing all customers.
+     */
     private void pauseGame() {
         wasteTimer.stop();
         customerTimer.stop();
@@ -458,7 +481,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-    // Resume the game
+    /**
+     * Resumes the game by starting all timers and resuming all customers.
+     */
     public void resumeGame() {
         if (wasteTimer != null) {
             wasteTimer.start();
@@ -471,7 +496,9 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
         }
     }
 
-    // Stop all timers in the game
+    /**
+     * Stops all timers in the game.
+     */
     private void stopAllTimers() {
         if (wasteTimer != null) {
             wasteTimer.stop();
@@ -480,5 +507,4 @@ public class Driver extends JPanel implements ActionListener, MouseListener, Mou
             customerTimer.stop();
         }
     }
-
 }
